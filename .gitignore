@@ -1,7 +1,7 @@
-# Bỏ qua file nhạy cảm
+
 server/serviceAccountKey.json
 
-# Bỏ qua thư mục node_modules (nếu là dự án Node.js)
+
 node_modules/
 
 
