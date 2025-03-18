@@ -4,6 +4,7 @@ server/serviceAccountKey.json
 # Bỏ qua thư mục node_modules (nếu là dự án Node.js)
 node_modules/
 
-# Bỏ qua các file build (nếu là dự án Flutter)
+
 build/
 .dart_tool/
+"server/serviceAccountKey.json" 
