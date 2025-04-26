@@ -1,0 +1,14 @@
+
+server/serviceAccountKey.json
+
+
+node_modules/
+
+
+build/
+.dart_tool/
+"server/serviceAccountKey.json" 
+
+
+server/config/serviceAccountKey.json
+server/.env
