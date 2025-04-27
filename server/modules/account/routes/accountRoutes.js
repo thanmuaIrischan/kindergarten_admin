@@ -13,4 +13,13 @@ router.post('/authenticate', asyncHandler(accountController.authenticate));
 // Get account by ID
 router.get('/:id', asyncHandler(accountController.getAccountById));
 
+// Send verification code
+router.post('/send-verification-code', asyncHandler(accountController.sendVerificationCode));
+
+// Verify code
+router.post('/verify-code', asyncHandler(accountController.verifyCode));
+
+// Reset password
+router.post('/reset-password', asyncHandler(accountController.resetPassword));
+
 module.exports = router; 

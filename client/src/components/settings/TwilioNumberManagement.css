@@ -1,0 +1,188 @@
+.twilio-management-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: var(--container-bg);
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.twilio-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.twilio-header h2 {
+    color: var(--text-color);
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.twilio-header p {
+    color: var(--text-color);
+    opacity: 0.8;
+}
+
+.search-section {
+    background-color: var(--background-color);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.search-section h3 {
+    color: var(--text-color);
+    margin-bottom: 1rem;
+}
+
+.search-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    align-items: end;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.form-group select,
+.form-group input {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--container-bg);
+    color: var(--text-color);
+}
+
+.search-button {
+    padding: 0.75rem 1.5rem;
+    background-color: var(--button-bg);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.search-button:hover {
+    background-color: var(--button-hover);
+}
+
+.search-button:disabled {
+    background-color: var(--button-disabled);
+    cursor: not-allowed;
+}
+
+.numbers-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.available-numbers,
+.purchased-numbers {
+    background-color: var(--background-color);
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.available-numbers h3,
+.purchased-numbers h3 {
+    color: var(--text-color);
+    margin-bottom: 1rem;
+}
+
+.numbers-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.number-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.number-item:last-child {
+    border-bottom: none;
+}
+
+.number {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.purchase-button {
+    padding: 0.5rem 1rem;
+    background-color: var(--button-bg);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.purchase-button:hover {
+    background-color: var(--button-hover);
+}
+
+.purchase-button:disabled {
+    background-color: var(--button-disabled);
+    cursor: not-allowed;
+}
+
+.status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+}
+
+.status.active {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.no-numbers {
+    color: var(--text-color);
+    opacity: 0.7;
+    text-align: center;
+    padding: 1rem;
+}
+
+.error-message {
+    background-color: var(--error-color);
+    color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.error-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.error-content {
+    white-space: pre-wrap;
+}
+
+@media (max-width: 768px) {
+    .numbers-section {
+        grid-template-columns: 1fr;
+    }
+
+    .search-filters {
+        grid-template-columns: 1fr;
+    }
+}

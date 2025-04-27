@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const accountRoutes = require("./modules/account/routes/accountRoutes");
 const newsRoutes = require("./modules/news/routes/newsRoutes");
+const twilioRoutes = require("./modules/twilio/routes/twilioRoutes");
 require('./config/firebase'); // Initialize Firebase
 
 const app = express();
@@ -23,6 +24,7 @@ app.use((req, res, next) => {
 // Routes
 app.use("/api/account", accountRoutes);
 app.use("/api/news", newsRoutes);
+app.use("/api/twilio", twilioRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
