@@ -1,22 +1,19 @@
 import React, { useState } from 'react';
-import { FaTachometerAlt, FaUserGraduate, FaNewspaper, FaUsers, FaSignOutAlt, FaBars, FaChevronLeft, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaTachometerAlt, FaUserGraduate, FaNewspaper, FaUsers, FaSignOutAlt, FaBars, FaChevronLeft, FaChalkboardTeacher } from 'react-icons/fa';
 import '../../styles/Sidebar.css';
 
 const staticNavItems = [
     { key: 'dashboard', label: 'Dashboard', icon: <FaTachometerAlt /> },
     { key: 'students', label: 'Students', icon: <FaUserGraduate /> },
+    { key: 'classes', label: 'Classes', icon: <FaChalkboardTeacher /> },
     { key: 'news', label: 'News', icon: <FaNewspaper /> },
     { key: 'accounts', label: 'Accounts', icon: <FaUsers /> },
 ];
 
 const Sidebar = ({
     selected, onSelect, user, onLogout,
-    collapsed, setCollapsed, visible, setVisible,
-    modules, onAddModule, onRenameModule, onDeleteModule
+    collapsed, setCollapsed, visible, setVisible
 }) => {
-    const [editingKey, setEditingKey] = useState(null);
-    const [editValue, setEditValue] = useState('');
-
     if (!visible) {
         return (
             <button className="sidebar-show-btn" onClick={() => setVisible(true)}>
@@ -24,19 +21,6 @@ const Sidebar = ({
             </button>
         );
     }
-
-    const handleEdit = (key, label) => {
-        setEditingKey(key);
-        setEditValue(label);
-    };
-
-    const handleEditSubmit = (key) => {
-        if (editValue.trim()) {
-            onRenameModule(key, editValue.trim());
-        }
-        setEditingKey(null);
-        setEditValue('');
-    };
 
     return (
         <nav className={`sidebar${collapsed ? ' collapsed' : ''}`}>
@@ -47,7 +31,7 @@ const Sidebar = ({
                 {!collapsed && <div className="sidebar-logo">Kindergarten Admin</div>}
             </div>
             <div className="sidebar-nav">
-                {[...staticNavItems].map(item => (
+                {staticNavItems.map(item => (
                     <div
                         key={item.key}
                         className={`sidebar-item${selected === item.key ? ' active' : ''}`}
@@ -58,58 +42,6 @@ const Sidebar = ({
                         {!collapsed && <span>{item.label}</span>}
                     </div>
                 ))}
-                {modules.map(item => (
-                    <div
-                        key={item.key}
-                        className={`sidebar-item module-item${selected === item.key ? ' active' : ''}`}
-                        title={collapsed ? item.label : undefined}
-                        style={{ position: 'relative' }}
-                    >
-                        {item.icon}
-                        {!collapsed && (
-                            <>
-                                {editingKey === item.key ? (
-                                    <form
-                                        onSubmit={e => { e.preventDefault(); handleEditSubmit(item.key); }}
-                                        style={{ display: 'inline', marginLeft: 4 }}
-                                    >
-                                        <input
-                                            className="sidebar-edit-input"
-                                            value={editValue}
-                                            onChange={e => setEditValue(e.target.value)}
-                                            autoFocus
-                                            onBlur={() => handleEditSubmit(item.key)}
-                                            style={{ fontSize: '0.92rem', width: 90 }}
-                                        />
-                                    </form>
-                                ) : (
-                                    <span style={{ marginRight: 8 }}>{item.label}</span>
-                                )}
-                                <button
-                                    className="sidebar-module-btn"
-                                    onClick={() => handleEdit(item.key, item.label)}
-                                    tabIndex={-1}
-                                    title="Rename"
-                                >
-                                    <FaEdit />
-                                </button>
-                                <button
-                                    className="sidebar-module-btn"
-                                    onClick={() => onDeleteModule(item.key)}
-                                    tabIndex={-1}
-                                    title="Delete"
-                                >
-                                    <FaTrash />
-                                </button>
-                            </>
-                        )}
-                    </div>
-                ))}
-                {!collapsed && (
-                    <button className="sidebar-add-module" onClick={onAddModule}>
-                        <FaPlus /> Add Module
-                    </button>
-                )}
             </div>
             <div className="sidebar-user">
                 {!collapsed && (

@@ -104,11 +104,16 @@
     background: none;
     border: none;
     color: var(--text-color);
-    font-size: 1.2rem;
     cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 50%;
-    transition: all 0.3s ease;
+    padding: 1rem;
+    font-size: 1rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    transition: color 0.3s ease;
+    width: 0.5rem;
+    height: 2rem;
+    margin-left: 100px;
 }
 
 .theme-toggle-button:hover {
@@ -287,15 +292,16 @@
     text-decoration: underline;
 }
 
-.login-button-container {
-    margin-top: 2rem;
+.form-actions {
     display: flex;
     justify-content: center;
+    margin-top: 2rem;
 }
 
 .login-button {
-    width: 200px;
-    padding: 1rem;
+    width: 100%;
+    max-width: 200px;
+    padding: 0.8rem 1.5rem;
     background: var(--primary-color);
     color: white;
     border: none;
@@ -304,6 +310,9 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .login-button:hover {

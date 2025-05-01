@@ -5,6 +5,7 @@ const cors = require("cors");
 const accountRoutes = require("./modules/account/routes/accountRoutes");
 const newsRoutes = require("./modules/news/routes/newsRoutes");
 const twilioRoutes = require("./modules/twilio/routes/twilioRoutes");
+const studentRoutes = require("./modules/student/routes/student.routes");
 require('./config/firebase'); // Initialize Firebase
 
 const app = express();
@@ -12,19 +13,31 @@ const port = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Logging middleware
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  console.log('Request body:', req.body);
-  next();
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    if (req.method !== 'GET') {
+        console.log('Request body:', req.body);
+    }
+    next();
+});
+
+// Configure Cloudinary
+const cloudinary = require('cloudinary').v2;
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 // Routes
 app.use("/api/account", accountRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/twilio", twilioRoutes);
+app.use("/api/student", studentRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -33,9 +46,9 @@ app.use((err, req, res, next) => {
         stack: err.stack,
         name: err.name
     });
-    res.status(500).json({ 
-        success: false, 
-        message: 'Something broke!' + err.message,
+    res.status(err.status || 500).json({
+        success: false,
+        message: err.message || 'Something went wrong!',
         error: err.message,
         stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });

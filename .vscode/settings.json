@@ -1,0 +1,19 @@
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/node_modules": true
+    },
+    "javascript.validate.enable": true,
+    "typescript.validate.enable": true,
+    "java.project.importOnFirstTimeStartup": "never",
+    "java.configuration.updateBuildConfiguration": "never",
+    "java.configuration.runtimes": [],
+    "java.project.exportJar.targetPath": "",
+    "java.project.sourcePaths": [],
+    "java.project.outputPath": "",
+    "java.project.referencedLibraries": []
+}

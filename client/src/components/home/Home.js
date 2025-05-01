@@ -1,20 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import CalendarPanel from './CalendarPanel';
 import ContentHeader from './ContentHeader';
+import Dashboard from '../dashboard/Dashboard';
+import CalendarPanel from '../calendar/CalendarPanel';
+import StudentList from '../../modules/student/StudentList';
+import AddStudent from '../../modules/student/AddStudent';
+import EditStudent from '../../modules/student/EditStudent';
+import StudentDetails from '../../modules/student/components/StudentDetails';
+import ClassList from '../../modules/class/ClassList';
+import { useTheme } from '../../context/ThemeContext';
 import '../../styles/Home.css';
 import '../../styles/Sidebar.css';
 import '../../styles/CalendarPanel.css';
 import '../../styles/ContentHeader.css';
-import { FaPuzzlePiece } from 'react-icons/fa';
-
-const Dashboard = () => (
-    <div>
-        <h2>Welcome to the Kindergarten Admin Dashboard</h2>
-        <p>Select a section from the navigation to get started.</p>
-    </div>
-);
 
 const Home = () => {
     const navigate = useNavigate();
@@ -25,10 +24,10 @@ const Home = () => {
     const [visible, setVisible] = useState(true);
     const [calendarCollapsed, setCalendarCollapsed] = useState(false);
     const [calendarVisible, setCalendarVisible] = useState(true);
-    const [modules, setModules] = useState([
-        // Example: { key: 'custom1', label: 'Custom Module', icon: <FaPuzzlePiece /> }
-    ]);
-    const [isDark, setIsDark] = useState(false);
+    const [studentAction, setStudentAction] = useState(null); // 'list', 'add', 'edit', or 'view'
+    const [selectedStudentId, setSelectedStudentId] = useState(null);
+    const [selectedStudent, setSelectedStudent] = useState(null);
+    const { isDark, toggleTheme } = useTheme();
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -57,30 +56,40 @@ const Home = () => {
         }
     }, [navigate]);
 
+    useEffect(() => {
+        // Reset student action when changing main navigation
+        if (selected !== 'students') {
+            setStudentAction(null);
+            setSelectedStudentId(null);
+            setSelectedStudent(null);
+        } else if (!studentAction) {
+            setStudentAction('list');
+        }
+    }, [selected]);
+
     const handleLogout = () => {
         localStorage.removeItem('user');
         navigate('/login');
     };
 
-    // Demo: Add a dummy module
-    const handleAddModule = () => {
-        const newKey = `custom${modules.length + 1}`;
-        setModules([
-            ...modules,
-            { key: newKey, label: `Custom Module ${modules.length + 1}`, icon: <FaPuzzlePiece /> }
-        ]);
+    const handleStudentEdit = (studentId) => {
+        setSelectedStudentId(studentId);
+        setStudentAction('edit');
     };
 
-    const handleRenameModule = (key, newLabel) => {
-        setModules(modules.map(m => m.key === key ? { ...m, label: newLabel } : m));
+    const handleStudentAdd = () => {
+        setStudentAction('add');
     };
 
-    const handleDeleteModule = (key) => {
-        setModules(modules.filter(m => m.key !== key));
+    const handleStudentView = (student) => {
+        setSelectedStudent(student);
+        setStudentAction('view');
     };
 
-    const handleToggleTheme = () => {
-        setIsDark(d => !d);
+    const handleBackToList = () => {
+        setStudentAction('list');
+        setSelectedStudentId(null);
+        setSelectedStudent(null);
     };
 
     if (isLoading) {
@@ -91,8 +100,32 @@ const Home = () => {
         return null;
     }
 
+    const renderStudentContent = () => {
+        switch (studentAction) {
+            case 'list':
+                return <StudentList
+                    onEdit={handleStudentEdit}
+                    onAdd={handleStudentAdd}
+                    onViewDetails={handleStudentView}
+                />;
+            case 'add':
+                return <AddStudent onBack={handleBackToList} />;
+            case 'edit':
+                return <EditStudent id={selectedStudentId} onBack={handleBackToList} />;
+            case 'view':
+                return selectedStudent ? (
+                    <StudentDetails
+                        student={selectedStudent}
+                        onBack={handleBackToList}
+                    />
+                ) : null;
+            default:
+                return null;
+        }
+    };
+
     return (
-        <div className="home-layout">
+        <div className={`home-layout ${isDark ? 'dark' : ''}`}>
             <Sidebar
                 selected={selected}
                 onSelect={setSelected}
@@ -102,14 +135,12 @@ const Home = () => {
                 setCollapsed={setCollapsed}
                 visible={visible}
                 setVisible={setVisible}
-                modules={modules}
-                onAddModule={handleAddModule}
-                onRenameModule={handleRenameModule}
-                onDeleteModule={handleDeleteModule}
             />
             <main className="main-content">
-                <ContentHeader isDark={isDark} onToggleTheme={handleToggleTheme} />
+                <ContentHeader isDark={isDark} onToggleTheme={toggleTheme} />
                 {selected === 'dashboard' && <Dashboard />}
+                {selected === 'students' && renderStudentContent()}
+                {selected === 'classes' && <ClassList />}
                 {/* Add more content components here based on selected */}
             </main>
             <CalendarPanel

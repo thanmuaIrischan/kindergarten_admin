@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background circle -->
+    <circle cx="256" cy="256" r="256" fill="#ecf0f1"/>
+    <!-- School building base -->
+    <path d="M256 96L84 184V424H428V184L256 96Z" fill="#3498db"/>
+    <!-- Roof -->
+    <path d="M256 96L84 184H428L256 96Z" fill="#2980b9"/>
+    <!-- Door -->
+    <rect x="220" y="284" width="72" height="140" fill="#e74c3c"/>
+    <!-- Windows -->
+    <rect x="136" y="224" width="48" height="48" fill="#f1c40f"/>
+    <rect x="328" y="224" width="48" height="48" fill="#f1c40f"/>
+    <!-- Chimney -->
+    <rect x="340" y="124" width="28" height="40" fill="#95a5a6"/>
+</svg> 

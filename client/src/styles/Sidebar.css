@@ -1,5 +1,5 @@
 .sidebar {
-    width: 220px;
+    width: 280px;
     background: #fff;
     border-right: 1px solid #e0e0e0;
     display: flex;
@@ -7,14 +7,16 @@
     justify-content: space-between;
     padding: 2rem 0 1.5rem 0;
     font-size: 0.95rem;
+    transition: width 0.3s ease;
 }
 
 .sidebar-logo {
     font-size: 1.4rem;
     font-weight: bold;
-    color: #4a90e2;
+    color: var(--primary-color);
     margin-bottom: 2rem;
     text-align: center;
+    transition: color 0.3s ease;
 }
 
 .sidebar-nav {
@@ -23,48 +25,55 @@
 
 .sidebar-item,
 .sidebar-add-module,
-.sidebar-module-btn {
-    padding-left: 18px;
+.sidebar-logout,
+.sidebar-collapse-btn,
+.sidebar-hide-btn {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
 }
 
 .sidebar-item {
-    padding: 0.7rem 2rem 0.7rem 18px;
-    margin-bottom: 0.3rem;
     display: flex;
     align-items: center;
     gap: 1rem;
+    padding: 0.7rem 2rem 0.7rem 18px;
     cursor: pointer;
-    color: #333;
-    border-radius: 0;
-    font-size: 0.95rem;
+    color: var(--text-color);
+    margin-bottom: 0.3rem;
     transition: background 0.2s, color 0.2s;
+    border-radius: 0;
 }
 
 .sidebar-item.active,
 .sidebar-item:hover {
-    background: #eaf3fb;
-    color: #4a90e2;
+    background: var(--event-blue);
+    color: var(--primary-color);
 }
 
 .sidebar-user {
     padding: 1rem 2rem 0.5rem 2rem;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    transition: border-color 0.3s ease;
 }
 
 .sidebar-user-info {
     font-size: 1rem;
     margin-bottom: 0.5rem;
-    color: #333;
+    color: var(--text-color);
+    transition: color 0.3s ease;
 }
 
 .sidebar-logout {
-    background: #f5f7fa;
-    color: #e74c3c;
+    background: var(--bg-color-light);
+    color: var(--danger-color);
     border: none;
-    border-radius: 0;
+    border-radius: 6px;
     padding: 0.5rem 1rem;
     font-size: 1rem;
     cursor: pointer;
@@ -75,12 +84,13 @@
 }
 
 .sidebar-logout:hover {
-    background: #ffeaea;
-    color: #c0392b;
+    background: var(--danger-color-light);
+    color: var(--danger-color);
 }
 
 .sidebar.collapsed {
     width: 60px;
+    padding: 1rem 0;
 }
 
 .sidebar.collapsed .sidebar-logo,
@@ -88,6 +98,65 @@
 .sidebar.collapsed .sidebar-add-module,
 .sidebar.collapsed span {
     display: none;
+}
+
+.sidebar.collapsed .sidebar-item {
+    padding: 0.7rem;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+.sidebar.collapsed .sidebar-item svg {
+    font-size: 1.2rem;
+}
+
+.sidebar.collapsed .sidebar-user {
+    padding: 1rem 0.5rem;
+    align-items: center;
+}
+
+.sidebar.collapsed .sidebar-logout {
+    padding: 0.5rem;
+    justify-content: center;
+    width: 100%;
+}
+
+.sidebar.collapsed .sidebar-logout svg {
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+.sidebar.collapsed .sidebar-collapse-btn {
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 0.7rem;
+    gap: 0;
+}
+
+.sidebar.collapsed .sidebar-collapse-btn svg {
+    font-size: 1.2rem;
+    /* Kích thước icon phù hợp */
+}
+
+.sidebar.collapsed .sidebar-item,
+.sidebar.collapsed .sidebar-collapse-btn {
+    padding: 0.7rem;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+    gap: 0;
+    /* Đảm bảo không có khoảng cách thừa */
+}
+
+.sidebar.collapsed .sidebar-item svg,
+.sidebar.collapsed .sidebar-collapse-btn svg {
+    font-size: 1.5rem;
+    /* Điều chỉnh kích thước icon khi thu gọn */
+}
+
+.sidebar.collapsed .sidebar-top {
+    justify-content: center;
+    padding-left: 0;
 }
 
 .sidebar-show-btn {
@@ -109,38 +178,53 @@
     justify-content: center;
 }
 
+.sidebar-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0.5rem;
+    margin-bottom: 1rem;
+    width: 100%;
+    margin-right: 0;
+    height: 30px;
+}
+
 .sidebar-collapse-btn,
 .sidebar-hide-btn {
     background: none;
     border: none;
     color: #4a90e2;
-    font-size: 1.2rem;
+    font-size: 1rem;
     cursor: pointer;
-    margin-bottom: 1rem;
-    margin-right: 0.5rem;
-}
-
-.sidebar-top {
+    padding: 0.5rem;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    gap: 0.5rem;
-    padding-left: 1rem;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    transition: background 0.2s, color 0.2s;
 }
 
-.sidebar.collapsed .sidebar-top {
-    margin-right: 16px;
+.sidebar-collapse-btn svg {
+    width: 1rem;
+    height: 1rem;
+    display: block;
+}
+
+.sidebar-collapse-btn:hover {
+    background: #eaf3fb;
+    color: #4a90e2;
+    align-items: center;
 }
 
 .sidebar-add-module {
-    background: #eaf3fb;
-    color: #4a90e2;
+    background: var(--event-blue);
+    color: var(--primary-color);
     border: none;
     border-radius: 0;
     padding: 0.5rem 1rem;
     margin-left: 0;
     margin-right: 0;
-    margin-top: 1rem;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -150,13 +234,14 @@
 }
 
 .sidebar-add-module:hover {
-    background: #d2e7fa;
+    background: var(--event-blue);
+    opacity: 0.9;
 }
 
 .sidebar-module-btn {
     background: none;
     border: none;
-    color: #4a90e2;
+    color: var(--primary-color);
     margin-left: 2px;
     padding: 2px 6px;
     cursor: pointer;
@@ -166,14 +251,48 @@
 }
 
 .sidebar-module-btn:hover {
-    color: #e74c3c;
+    color: var(--danger-color);
 }
 
 .sidebar-edit-input {
     font-size: 0.92rem;
     padding: 2px 6px;
     margin-right: 4px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--border-color);
     border-radius: 0;
     outline: none;
+    background: var(--container-bg);
+    color: var(--text-color);
+    transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark mode specific styles */
+.home-layout.dark .sidebar-item {
+    color: var(--text-color);
+}
+
+.home-layout.dark .sidebar-item.active,
+.home-layout.dark .sidebar-item:hover {
+    background: var(--event-blue);
+    color: var(--primary-color);
+}
+
+.home-layout.dark .sidebar-logout {
+    background: var(--bg-color-light);
+    color: var(--danger-color);
+}
+
+.home-layout.dark .sidebar-logout:hover {
+    background: var(--danger-color-light);
+}
+
+.home-layout.dark .sidebar-add-module {
+    background: var(--event-blue);
+    color: var(--primary-color);
+}
+
+.home-layout.dark .sidebar-edit-input {
+    background: var(--container-bg);
+    color: var(--text-color);
+    border-color: var(--border-color);
 }

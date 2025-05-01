@@ -17,7 +17,7 @@ async function initTestAccount() {
       console.log('Admin account not found. Creating test account...');
       const accountData = {
         username: 'admin',
-        password: 'admin',
+        password: 'admin123',
         role: 'admin',
         fullName: 'Admin User',
         phoneNumber: '1234567890',

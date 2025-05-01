@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- School building base -->
+    <path d="M16 2L3 8V28H29V8L16 2Z" fill="#3498db"/>
+    <!-- Roof -->
+    <path d="M16 2L3 8H29L16 2Z" fill="#2980b9"/>
+    <!-- Door -->
+    <rect x="13" y="18" width="6" height="10" fill="#e74c3c"/>
+    <!-- Windows -->
+    <rect x="7" y="12" width="4" height="4" fill="#f1c40f"/>
+    <rect x="21" y="12" width="4" height="4" fill="#f1c40f"/>
+    <!-- Chimney -->
+    <rect x="22" y="4" width="2" height="3" fill="#95a5a6"/>
+</svg> 

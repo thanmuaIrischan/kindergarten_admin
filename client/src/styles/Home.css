@@ -67,6 +67,8 @@
     flex: 1;
     padding: 2.5rem 2rem;
     overflow-y: auto;
+    background: var(--background-color);
+    transition: background-color 0.3s ease;
 }
 
 .main-content h2 {
@@ -91,18 +93,18 @@
 .home-layout {
     display: flex;
     height: 100vh;
-    background: #f5f7fa;
+    background: var(--background-color);
+    transition: background-color 0.3s ease;
 }
 
 .sidebar {
     width: 220px;
-    background: #fff;
-    border-right: 1px solid #e0e0e0;
+    background: var(--container-bg);
+    border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    padding: 2rem 0 1.5rem 0;
-    font-size: 0.95rem;
+    padding-top: 2rem;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .sidebar-logo {
@@ -624,4 +626,29 @@ body.dark-mode .form-control {
 
 body.dark-mode .search-icon {
     color: #f1f3f5;
+}
+
+/* Dark mode specific styles */
+.home-layout.dark {
+    --background-color: #1a1a1a;
+    --container-bg: #2d2d2d;
+    --border-color: #404040;
+    --text-color: #f5f5f5;
+    --text-light: #b0b0b0;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+.home-layout.dark .sidebar {
+    background: var(--container-bg);
+    border-right-color: var(--border-color);
+}
+
+.home-layout.dark .main-content {
+    background: var(--background-color);
+}
+
+.home-layout.dark .calendar-panel {
+    background: var(--container-bg);
+    border-left-color: var(--border-color);
+    box-shadow: -2px 0 8px var(--shadow-color);
 }
