@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { FaTachometerAlt, FaUserGraduate, FaNewspaper, FaUsers, FaSignOutAlt, FaBars, FaChevronLeft, FaChalkboardTeacher } from 'react-icons/fa';
+import { FaTachometerAlt, FaUserGraduate, FaNewspaper, FaUsers, FaSignOutAlt, FaBars, FaChevronLeft, FaChalkboardTeacher, FaCalendarAlt } from 'react-icons/fa';
 import '../../styles/Sidebar.css';
 
 const staticNavItems = [
     { key: 'dashboard', label: 'Dashboard', icon: <FaTachometerAlt /> },
     { key: 'students', label: 'Students', icon: <FaUserGraduate /> },
     { key: 'classes', label: 'Classes', icon: <FaChalkboardTeacher /> },
+    { key: 'semester', label: 'Semester', icon: <FaCalendarAlt /> },
     { key: 'news', label: 'News', icon: <FaNewspaper /> },
     { key: 'accounts', label: 'Accounts', icon: <FaUsers /> },
 ];

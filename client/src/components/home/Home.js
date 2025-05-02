@@ -9,11 +9,17 @@ import AddStudent from '../../modules/student/AddStudent';
 import EditStudent from '../../modules/student/EditStudent';
 import StudentDetails from '../../modules/student/components/StudentDetails';
 import ClassList from '../../modules/class/ClassList';
+import SemesterList from '../../modules/semester/SemesterList';
+import SemesterForm from '../../modules/semester/components/SemesterForm';
+import SemesterDetails from '../../modules/semester/components/SemesterDetails';
 import { useTheme } from '../../context/ThemeContext';
+import axios from 'axios';
 import '../../styles/Home.css';
 import '../../styles/Sidebar.css';
 import '../../styles/CalendarPanel.css';
 import '../../styles/ContentHeader.css';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
 const Home = () => {
     const navigate = useNavigate();
@@ -27,6 +33,8 @@ const Home = () => {
     const [studentAction, setStudentAction] = useState(null); // 'list', 'add', 'edit', or 'view'
     const [selectedStudentId, setSelectedStudentId] = useState(null);
     const [selectedStudent, setSelectedStudent] = useState(null);
+    const [semesterAction, setSemesterAction] = useState(null); // 'list', 'add', or 'edit'
+    const [selectedSemester, setSelectedSemester] = useState(null);
     const { isDark, toggleTheme } = useTheme();
 
     useEffect(() => {
@@ -67,6 +75,16 @@ const Home = () => {
         }
     }, [selected]);
 
+    useEffect(() => {
+        // Reset semester action when changing main navigation
+        if (selected !== 'semester') {
+            setSemesterAction(null);
+            setSelectedSemester(null);
+        } else if (!semesterAction) {
+            setSemesterAction('list');
+        }
+    }, [selected]);
+
     const handleLogout = () => {
         localStorage.removeItem('user');
         navigate('/login');
@@ -90,6 +108,35 @@ const Home = () => {
         setStudentAction('list');
         setSelectedStudentId(null);
         setSelectedStudent(null);
+    };
+
+    const handleSemesterEdit = (semester) => {
+        setSelectedSemester(semester);
+        setSemesterAction('edit');
+    };
+
+    const handleSemesterAdd = () => {
+        setSemesterAction('add');
+    };
+
+    const handleSemesterView = (semester) => {
+        setSelectedSemester(semester);
+        setSemesterAction('view');
+    };
+
+    const handleSemesterSubmit = async (data) => {
+        try {
+            if (semesterAction === 'add') {
+                await axios.post(`${API_URL}/semester`, data);
+            } else {
+                await axios.put(`${API_URL}/semester/${selectedSemester.id}`, data);
+            }
+            setSemesterAction('list');
+            setSelectedSemester(null);
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to save semester. Please try again.');
+        }
     };
 
     if (isLoading) {
@@ -124,6 +171,35 @@ const Home = () => {
         }
     };
 
+    const renderSemesterContent = () => {
+        switch (semesterAction) {
+            case 'list':
+                return <SemesterList
+                    onEdit={handleSemesterEdit}
+                    onAdd={handleSemesterAdd}
+                    onViewDetails={handleSemesterView}
+                />;
+            case 'add':
+                return <SemesterForm
+                    onSubmit={handleSemesterSubmit}
+                    onBack={() => setSemesterAction('list')}
+                />;
+            case 'edit':
+                return <SemesterForm
+                    initialData={selectedSemester}
+                    onSubmit={handleSemesterSubmit}
+                    onBack={() => setSemesterAction('list')}
+                />;
+            case 'view':
+                return <SemesterDetails
+                    semester={selectedSemester}
+                    onBack={() => setSemesterAction('list')}
+                />;
+            default:
+                return null;
+        }
+    };
+
     return (
         <div className={`home-layout ${isDark ? 'dark' : ''}`}>
             <Sidebar
@@ -141,7 +217,7 @@ const Home = () => {
                 {selected === 'dashboard' && <Dashboard />}
                 {selected === 'students' && renderStudentContent()}
                 {selected === 'classes' && <ClassList />}
-                {/* Add more content components here based on selected */}
+                {selected === 'semester' && renderSemesterContent()}
             </main>
             <CalendarPanel
                 collapsed={calendarCollapsed}
