@@ -7,6 +7,8 @@ import ForgotPassword from './components/auth/ForgotPassword';
 import Home from './components/home/Home';
 import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
+import TeacherList from './modules/teacher/components/TeacherList';
+import AddTeacher from './modules/teacher/components/AddTeacher';
 
 const App = () => {
   return (
@@ -18,6 +20,8 @@ const App = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/home" element={<Home />} />
+              <Route path="/teachers" element={<TeacherList />} />
+              <Route path="/teachers/add" element={<AddTeacher />} />
               <Route path="/" element={<Navigate to="/login" replace />} />
             </Routes>
           </div>

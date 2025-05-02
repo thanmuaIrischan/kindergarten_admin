@@ -52,88 +52,93 @@ const SemesterForm = ({ onSubmit, isLoading, initialData, onBack }) => {
 
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <Paper
-                elevation={0}
-                sx={{
-                    p: 3,
-                    backgroundColor: theme.palette.background.paper,
-                }}
-            >
-                <Box display="flex" alignItems="center" mb={3}>
-                    <Button
-                        startIcon={<ArrowBackIcon />}
-                        onClick={onBack}
-                        sx={{
-                            mr: 2,
-                            color: theme.palette.mode === 'dark' ? '#ffffff' : '#2c3e50',
-                            '&:hover': {
-                                backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(44, 62, 80, 0.08)',
-                            }
-                        }}
-                    >
-                        Back to List
-                    </Button>
-                    <Typography variant="h6" color="primary">
-                        {initialData ? 'Edit Semester' : 'Add New Semester'}
-                    </Typography>
-                </Box>
-
-                <form onSubmit={handleSubmit}>
-                    <Stack spacing={3}>
-                        <TextField
-                            required
-                            fullWidth
-                            name="semesterName"
-                            label="Semester Name"
-                            value={formData.semesterName}
-                            onChange={handleChange}
-                        />
-
-                        <DatePicker
-                            label="Start Date"
-                            value={formData.startDate}
-                            onChange={(newValue) => {
-                                setFormData(prev => ({
-                                    ...prev,
-                                    startDate: newValue
-                                }));
+            <Box className="semester-form-container">
+                <Paper
+                    elevation={0}
+                    sx={{
+                        p: 3,
+                        backgroundColor: theme.palette.background.paper,
+                        width: '100%',
+                        maxWidth: '100%',
+                        boxSizing: 'border-box',
+                    }}
+                >
+                    <Box display="flex" alignItems="center" mb={3}>
+                        <Button
+                            startIcon={<ArrowBackIcon />}
+                            onClick={onBack}
+                            sx={{
+                                mr: 2,
+                                color: theme.palette.mode === 'dark' ? '#ffffff' : '#2c3e50',
+                                '&:hover': {
+                                    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(44, 62, 80, 0.08)',
+                                }
                             }}
-                            renderInput={(params) => (
-                                <TextField {...params} required fullWidth />
-                            )}
-                        />
+                        >
+                            Back to List
+                        </Button>
+                        <Typography variant="h6" color="primary">
+                            {initialData ? 'Edit Semester' : 'Add New Semester'}
+                        </Typography>
+                    </Box>
 
-                        <DatePicker
-                            label="End Date"
-                            value={formData.endDate}
-                            onChange={(newValue) => {
-                                setFormData(prev => ({
-                                    ...prev,
-                                    endDate: newValue
-                                }));
-                            }}
-                            renderInput={(params) => (
-                                <TextField {...params} required fullWidth />
-                            )}
-                        />
+                    <form onSubmit={handleSubmit}>
+                        <Stack spacing={3} sx={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}>
+                            <TextField
+                                required
+                                fullWidth
+                                name="semesterName"
+                                label="Semester Name"
+                                value={formData.semesterName}
+                                onChange={handleChange}
+                            />
 
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                color="primary"
-                                disabled={isLoading}
-                                sx={{
-                                    minWidth: 120,
-                                    height: 40,
+                            <DatePicker
+                                label="Start Date"
+                                value={formData.startDate}
+                                onChange={(newValue) => {
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        startDate: newValue
+                                    }));
                                 }}
-                            >
-                                {isLoading ? 'Saving...' : 'Save'}
-                            </Button>
-                        </Box>
-                    </Stack>
-                </form>
-            </Paper>
+                                renderInput={(params) => (
+                                    <TextField {...params} required fullWidth />
+                                )}
+                            />
+
+                            <DatePicker
+                                label="End Date"
+                                value={formData.endDate}
+                                onChange={(newValue) => {
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        endDate: newValue
+                                    }));
+                                }}
+                                renderInput={(params) => (
+                                    <TextField {...params} required fullWidth />
+                                )}
+                            />
+
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                                <Button
+                                    type="submit"
+                                    variant="contained"
+                                    color="primary"
+                                    disabled={isLoading}
+                                    sx={{
+                                        minWidth: 120,
+                                        height: 40,
+                                    }}
+                                >
+                                    {isLoading ? 'Saving...' : 'Save'}
+                                </Button>
+                            </Box>
+                        </Stack>
+                    </form>
+                </Paper>
+            </Box>
         </LocalizationProvider>
     );
 };

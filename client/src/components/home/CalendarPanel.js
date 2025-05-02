@@ -1,40 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { FaChevronRight, FaChevronLeft, FaCalendarAlt, FaClock } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaClock } from 'react-icons/fa';
 import '../../styles/CalendarPanel.css';
 
-const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 const MONTHS = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
-const demoEvents = [
-    { day: 8, color: 'blue', title: 'Life Contingency Tutorials', date: '8th - 10th July 2021', time: '8AM - 9AM', location: 'Edulog Tutorial College, BLK 56, Lagos State.', type: 'tutorial' },
-    { day: 13, color: 'pink', title: 'Social Insurance Test', date: '13th July 2021', time: '8AM - 9AM', location: 'School Hall, University Road, Lagos State.', type: 'test' },
-    { day: 18, color: 'green', title: 'Adv. Maths Assignment Due', date: '18th July 2021', time: '', location: '**To be submitted via Email', type: 'assignment' },
-    { day: 23, color: 'orange', title: `Dr. Dipo's Tutorial Class`, date: '23rd July 2021', time: '10AM - 1PM', location: 'Edulog Tutorial College, BLK 56, Lagos State.', type: 'class' },
-];
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-function getTimeString() {
+const getTimeString = () => {
     const now = new Date();
-    return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}
+    return now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    });
+};
 
-function getMonthDays(year, month) {
+const getMonthDays = (year, month) => {
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    // Adjust: Sunday (0) -> 6, Monday (1) -> 0
-    const adjustedFirstDay = (firstDay === 0 ? 6 : firstDay - 1);
-    const days = [];
-    for (let i = 0; i < adjustedFirstDay; i++) days.push(null);
-    for (let d = 1; d <= daysInMonth; d++) days.push(d);
-    return days;
-}
+    const result = Array(firstDay).fill(0);
+    for (let i = 1; i <= daysInMonth; i++) result.push(i);
+    return result;
+};
 
-const CalendarPanel = ({ collapsed, setCollapsed, visible, setVisible }) => {
+const demoEvents = [
+    { day: 15, title: 'Parent Meeting', date: 'July 15', time: '2:00 PM', location: 'Room 101', color: 'blue' },
+    { day: 18, title: 'Art Exhibition', date: 'July 18', time: '3:30 PM', location: 'Main Hall', color: 'pink' },
+    { day: 22, title: 'Sports Day', date: 'July 22', time: '9:00 AM', location: 'Playground', color: 'green' }
+];
+
+const CalendarPanel = ({ collapsed, toggleCollapse, toggleVisibility }) => {
     const [time, setTime] = useState(getTimeString());
-    const [year, setYear] = useState(2021);
-    const [month, setMonth] = useState(6); // July (0-based)
+    const [year, setYear] = useState(new Date().getFullYear());
+    const [month, setMonth] = useState(new Date().getMonth());
 
     useEffect(() => {
         const interval = setInterval(() => setTime(getTimeString()), 1000);
@@ -42,22 +43,12 @@ const CalendarPanel = ({ collapsed, setCollapsed, visible, setVisible }) => {
     }, []);
 
     const days = getMonthDays(year, month);
-    // Map day number to color for dots
     const markedDays = Object.fromEntries(demoEvents.map(e => [e.day, e.color]));
-    const eventMap = Object.fromEntries(demoEvents.map(e => [e.day, e]));
-
-    if (!visible) {
-        return (
-            <button className="calendar-show-btn" onClick={() => setVisible(true)}>
-                <FaChevronLeft />
-            </button>
-        );
-    }
 
     if (collapsed) {
         return (
             <div className="calendar-panel-collapsed">
-                <button className="calendar-collapse-btn" onClick={() => setCollapsed(false)}>
+                <button className="calendar-collapse-btn" onClick={toggleCollapse}>
                     <FaChevronLeft />
                 </button>
             </div>
@@ -65,52 +56,54 @@ const CalendarPanel = ({ collapsed, setCollapsed, visible, setVisible }) => {
     }
 
     return (
-        <aside className="calendar-panel calendar-elegant">
+        <div className="calendar-panel">
             <div className="calendar-panel-header">
-                <button className="calendar-collapse-btn" onClick={() => setCollapsed(true)}>
+                <button className="calendar-collapse-btn" onClick={toggleCollapse}>
                     <FaChevronRight />
                 </button>
-                <span>My Progress</span>
+                <span>Calendar</span>
                 <div className="calendar-month-dropdown">
                     <select value={month} onChange={e => setMonth(Number(e.target.value))}>
                         {MONTHS.map((m, i) => <option value={i} key={m}>{m} {year}</option>)}
                     </select>
                 </div>
             </div>
-            <div className="calendar-elegant-frame">
-                <div className="calendar-header">
-                    {WEEKDAYS.map(d => <span key={d}>{d}</span>)}
-                </div>
-                <div className="calendar-body">
-                    {days.map((d, i) => d ? (
-                        <div className="day" key={i}>
-                            <span className="day-number">{d}</span>
-                            {markedDays[d] && <span className={`dot ${markedDays[d]}`}></span>}
-                        </div>
-                    ) : <div className="day empty" key={i}></div>)}
-                </div>
-            </div>
-            <div className="calendar-clock"><FaClock /> {time}</div>
-            <div className="calendar-events-header">
-                <span>Upcoming Activities</span>
-                <a href="#" className="calendar-see-all">See all</a>
-            </div>
-            <div className="calendar-events-list">
-                {demoEvents.map(ev => (
-                    <div className={`calendar-event-card ${ev.color}`} key={ev.day}>
-                        <div className="calendar-event-date-circle" style={{ background: `var(--event-${ev.color})` }}>{ev.day}</div>
-                        <div className="calendar-event-info">
-                            <div className="calendar-event-title">{ev.title}</div>
-                            <div className="calendar-event-meta">{ev.date} {ev.time && <>• {ev.time}</>}</div>
-                            <div className="calendar-event-location">{ev.location}</div>
-                        </div>
+            <div className="calendar-panel-content">
+                <div className="calendar-grid">
+                    <div className="calendar-header">
+                        {WEEKDAYS.map(d => <span key={d}>{d}</span>)}
                     </div>
-                ))}
+                    <div className="calendar-body">
+                        {days.map((d, i) => d ? (
+                            <div className="day" key={i}>
+                                <span className="day-number">{d}</span>
+                                {markedDays[d] && <span className={`dot ${markedDays[d]}`}></span>}
+                            </div>
+                        ) : <div className="day empty" key={i}></div>)}
+                    </div>
+                </div>
+                <div className="calendar-clock"><FaClock /> {time}</div>
+                <div className="calendar-events-header">
+                    <span>Upcoming Activities</span>
+                    <a href="#" className="calendar-see-all">See all</a>
+                </div>
+                <div className="calendar-events-list">
+                    {demoEvents.map(ev => (
+                        <div className={`calendar-event-card ${ev.color}`} key={ev.day}>
+                            <div className="calendar-event-date-circle">{ev.day}</div>
+                            <div className="calendar-event-info">
+                                <div className="calendar-event-title">{ev.title}</div>
+                                <div className="calendar-event-meta">{ev.date} {ev.time && <>• {ev.time}</>}</div>
+                                <div className="calendar-event-location">{ev.location}</div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
-            <button className="calendar-hide-btn" onClick={() => setVisible(false)} title="Hide Calendar">
-                Hide
+            <button className="calendar-hide-btn" onClick={toggleVisibility}>
+                Hide Calendar
             </button>
-        </aside>
+        </div>
     );
 };
 

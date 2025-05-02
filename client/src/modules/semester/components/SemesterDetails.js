@@ -14,12 +14,15 @@ const SemesterDetails = ({ semester, onBack }) => {
     const theme = useTheme();
 
     return (
-        <Box p={3}>
+        <Box className="semester-details-container" sx={{ width: '100%', maxWidth: '100%' }}>
             <Paper
                 elevation={0}
                 sx={{
                     p: 3,
                     backgroundColor: theme.palette.background.paper,
+                    width: '100%',
+                    maxWidth: '100%',
+                    boxSizing: 'border-box',
                 }}
             >
                 <Box display="flex" alignItems="center" mb={3}>
@@ -41,7 +44,7 @@ const SemesterDetails = ({ semester, onBack }) => {
                     </Typography>
                 </Box>
 
-                <Stack spacing={3}>
+                <Stack spacing={3} sx={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}>
                     <Box>
                         <Typography variant="subtitle2" color="textSecondary" gutterBottom>
                             Semester Name

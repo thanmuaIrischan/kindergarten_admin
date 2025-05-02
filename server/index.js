@@ -7,6 +7,7 @@ const newsRoutes = require("./modules/news/routes/newsRoutes");
 const twilioRoutes = require("./modules/twilio/routes/twilioRoutes");
 const studentRoutes = require("./modules/student/routes/student.routes");
 const semesterRoutes = require("./modules/semester/routes/semester.routes");
+const classRoutes = require("./modules/class/routes/class.routes");
 require('./config/firebase'); // Initialize Firebase
 
 const app = express();
@@ -40,6 +41,7 @@ app.use("/api/news", newsRoutes);
 app.use("/api/twilio", twilioRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/semester", semesterRoutes);
+app.use("/api/class", classRoutes);
 
 // 404 handler - must be before error handler
 app.use((req, res, next) => {

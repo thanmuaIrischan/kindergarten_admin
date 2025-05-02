@@ -20,19 +20,23 @@ import {
     Visibility as VisibilityIcon,
 } from '@mui/icons-material';
 
-const SemesterTable = ({ semesters, onEdit, onDelete, onViewDetails }) => {
+const ClassTable = React.forwardRef(({ classes, onEdit, onDelete, onViewDetails }, ref) => {
     const theme = useTheme();
 
-    if (!semesters || semesters.length === 0) {
+    if (!classes || classes.length === 0) {
         return (
             <TableContainer
                 component={Paper}
+                ref={ref}
                 sx={{
                     backgroundColor: theme.palette.mode === 'dark' ? '#1a1f2c' : '#ffffff',
                     boxShadow: theme.palette.mode === 'dark'
                         ? '0 4px 6px rgba(0, 0, 0, 0.4)'
                         : '0 2px 4px rgba(0, 0, 0, 0.1)',
                     minHeight: '200px',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    border: `1px solid ${theme.palette.mode === 'dark' ? '#374151' : '#e2e8f0'}`,
                 }}
             >
                 <Box
@@ -42,24 +46,28 @@ const SemesterTable = ({ semesters, onEdit, onDelete, onViewDetails }) => {
                     minHeight="200px"
                     flexDirection="column"
                     gap={2}
+                    sx={{
+                        backgroundColor: theme.palette.mode === 'dark' ? '#1a1f2c' : '#ffffff',
+                        p: 4
+                    }}
                 >
                     <Typography
                         variant="h6"
-                        color="textSecondary"
                         sx={{
                             color: theme.palette.mode === 'dark' ? '#9ca3af' : '#64748b',
+                            fontWeight: 500
                         }}
                     >
-                        No semesters found
+                        No classes found
                     </Typography>
                     <Typography
                         variant="body2"
-                        color="textSecondary"
                         sx={{
                             color: theme.palette.mode === 'dark' ? '#6b7280' : '#94a3b8',
+                            textAlign: 'center'
                         }}
                     >
-                        Add a new semester or adjust your search filters
+                        Add a new class or adjust your search filters
                     </Typography>
                 </Box>
             </TableContainer>
@@ -69,11 +77,15 @@ const SemesterTable = ({ semesters, onEdit, onDelete, onViewDetails }) => {
     return (
         <TableContainer
             component={Paper}
+            ref={ref}
             sx={{
                 backgroundColor: theme.palette.mode === 'dark' ? '#1a1f2c' : '#ffffff',
                 boxShadow: theme.palette.mode === 'dark'
                     ? '0 4px 6px rgba(0, 0, 0, 0.4)'
                     : '0 2px 4px rgba(0, 0, 0, 0.1)',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                border: `1px solid ${theme.palette.mode === 'dark' ? '#374151' : '#e2e8f0'}`,
             }}
         >
             <Table>
@@ -88,9 +100,12 @@ const SemesterTable = ({ semesters, onEdit, onDelete, onViewDetails }) => {
                                 borderBottom: theme.palette.mode === 'dark'
                                     ? '2px solid #1f2937'
                                     : '2px solid #3498db',
+                                '&:first-of-type': {
+                                    borderTopLeftRadius: '8px',
+                                },
                             }}
                         >
-                            Semester Name
+                            Class Name
                         </TableCell>
                         <TableCell
                             sx={{
@@ -103,7 +118,7 @@ const SemesterTable = ({ semesters, onEdit, onDelete, onViewDetails }) => {
                                     : '2px solid #3498db',
                             }}
                         >
-                            Start Date
+                            Semester
                         </TableCell>
                         <TableCell
                             sx={{
@@ -116,7 +131,20 @@ const SemesterTable = ({ semesters, onEdit, onDelete, onViewDetails }) => {
                                     : '2px solid #3498db',
                             }}
                         >
-                            End Date
+                            Teacher ID
+                        </TableCell>
+                        <TableCell
+                            sx={{
+                                backgroundColor: theme.palette.mode === 'dark' ? '#111827' : '#2c3e50',
+                                color: '#ffffff',
+                                fontWeight: 700,
+                                fontSize: '1.1rem',
+                                borderBottom: theme.palette.mode === 'dark'
+                                    ? '2px solid #1f2937'
+                                    : '2px solid #3498db',
+                            }}
+                        >
+                            Students Count
                         </TableCell>
                         <TableCell
                             className="no-print"
@@ -128,6 +156,10 @@ const SemesterTable = ({ semesters, onEdit, onDelete, onViewDetails }) => {
                                 borderBottom: theme.palette.mode === 'dark'
                                     ? '2px solid #1f2937'
                                     : '2px solid #3498db',
+                                width: '150px',
+                                '&:last-child': {
+                                    borderTopRightRadius: '8px',
+                                },
                             }}
                         >
                             Actions
@@ -135,9 +167,9 @@ const SemesterTable = ({ semesters, onEdit, onDelete, onViewDetails }) => {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {semesters.map((semester) => (
+                    {classes.map((classItem) => (
                         <TableRow
-                            key={semester.id}
+                            key={classItem.id}
                             sx={{
                                 '&:nth-of-type(odd)': {
                                     backgroundColor: theme.palette.mode === 'dark' ? '#1f2937' : '#f8f9fa',
@@ -158,10 +190,11 @@ const SemesterTable = ({ semesters, onEdit, onDelete, onViewDetails }) => {
                                     fontWeight: 500,
                                     borderBottom: theme.palette.mode === 'dark'
                                         ? '1px solid #1f2937'
-                                        : '1px solid #e0e0e0'
+                                        : '1px solid #e0e0e0',
+                                    padding: '12px 16px',
                                 }}
                             >
-                                {semester.semesterName}
+                                {classItem.className}
                             </TableCell>
                             <TableCell
                                 sx={{
@@ -170,10 +203,11 @@ const SemesterTable = ({ semesters, onEdit, onDelete, onViewDetails }) => {
                                     fontWeight: 500,
                                     borderBottom: theme.palette.mode === 'dark'
                                         ? '1px solid #1f2937'
-                                        : '1px solid #e0e0e0'
+                                        : '1px solid #e0e0e0',
+                                    padding: '12px 16px',
                                 }}
                             >
-                                {semester.startDate}
+                                {classItem.semesterName || 'Unknown Semester'}
                             </TableCell>
                             <TableCell
                                 sx={{
@@ -182,23 +216,38 @@ const SemesterTable = ({ semesters, onEdit, onDelete, onViewDetails }) => {
                                     fontWeight: 500,
                                     borderBottom: theme.palette.mode === 'dark'
                                         ? '1px solid #1f2937'
-                                        : '1px solid #e0e0e0'
+                                        : '1px solid #e0e0e0',
+                                    padding: '12px 16px',
                                 }}
                             >
-                                {semester.endDate}
+                                {classItem.teacherID}
+                            </TableCell>
+                            <TableCell
+                                sx={{
+                                    color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#000000',
+                                    fontSize: '1rem',
+                                    fontWeight: 500,
+                                    borderBottom: theme.palette.mode === 'dark'
+                                        ? '1px solid #1f2937'
+                                        : '1px solid #e0e0e0',
+                                    padding: '12px 16px',
+                                }}
+                            >
+                                {classItem.students ? classItem.students.length : 0}
                             </TableCell>
                             <TableCell
                                 className="no-print"
                                 sx={{
                                     borderBottom: theme.palette.mode === 'dark'
                                         ? '1px solid #1f2937'
-                                        : '1px solid #e0e0e0'
+                                        : '1px solid #e0e0e0',
+                                    padding: '12px 16px',
                                 }}
                             >
                                 <Stack direction="row" spacing={1}>
                                     <Tooltip title="View Details">
                                         <IconButton
-                                            onClick={() => onViewDetails(semester)}
+                                            onClick={() => onViewDetails(classItem)}
                                             size="small"
                                             sx={{
                                                 backgroundColor: theme.palette.mode === 'dark' ? 'rgba(52, 152, 219, 0.2)' : 'rgba(41, 128, 185, 0.1)',
@@ -210,12 +259,12 @@ const SemesterTable = ({ semesters, onEdit, onDelete, onViewDetails }) => {
                                                 boxShadow: theme.palette.mode === 'dark' ? '0 0 8px rgba(52, 152, 219, 0.2)' : 'none'
                                             }}
                                         >
-                                            <VisibilityIcon />
+                                            <VisibilityIcon sx={{ fontSize: '1.2rem' }} />
                                         </IconButton>
                                     </Tooltip>
                                     <Tooltip title="Edit">
                                         <IconButton
-                                            onClick={() => onEdit(semester)}
+                                            onClick={() => onEdit(classItem)}
                                             size="small"
                                             sx={{
                                                 backgroundColor: theme.palette.mode === 'dark' ? 'rgba(52, 152, 219, 0.2)' : 'rgba(41, 128, 185, 0.1)',
@@ -227,12 +276,12 @@ const SemesterTable = ({ semesters, onEdit, onDelete, onViewDetails }) => {
                                                 boxShadow: theme.palette.mode === 'dark' ? '0 0 8px rgba(52, 152, 219, 0.2)' : 'none'
                                             }}
                                         >
-                                            <EditIcon />
+                                            <EditIcon sx={{ fontSize: '1.2rem' }} />
                                         </IconButton>
                                     </Tooltip>
                                     <Tooltip title="Delete">
                                         <IconButton
-                                            onClick={() => onDelete(semester.id)}
+                                            onClick={() => onDelete(classItem.id)}
                                             size="small"
                                             sx={{
                                                 backgroundColor: theme.palette.mode === 'dark' ? 'rgba(231, 76, 60, 0.2)' : 'rgba(192, 57, 43, 0.1)',
@@ -244,7 +293,7 @@ const SemesterTable = ({ semesters, onEdit, onDelete, onViewDetails }) => {
                                                 boxShadow: theme.palette.mode === 'dark' ? '0 0 8px rgba(231, 76, 60, 0.2)' : 'none'
                                             }}
                                         >
-                                            <DeleteIcon />
+                                            <DeleteIcon sx={{ fontSize: '1.2rem' }} />
                                         </IconButton>
                                     </Tooltip>
                                 </Stack>
@@ -255,6 +304,6 @@ const SemesterTable = ({ semesters, onEdit, onDelete, onViewDetails }) => {
             </Table>
         </TableContainer>
     );
-};
+});
 
-export default SemesterTable; 
+export default ClassTable; 
