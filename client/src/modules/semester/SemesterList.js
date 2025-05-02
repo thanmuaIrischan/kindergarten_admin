@@ -396,14 +396,24 @@ const SemesterList = ({ onEdit, onAdd, onViewDetails }) => {
 
     if (loading) {
         return (
+            <Box className="semester-list-container" sx={{ width: '100%', maxWidth: '100%' }}>
             <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
                 <CircularProgress />
+                </Box>
             </Box>
         );
     }
 
     return (
-        <Box p={3}>
+        <Box className="semester-list-container" sx={{
+            width: '100%',
+            maxWidth: '100%',
+            '& .MuiPaper-root': {
+                width: '100%',
+                maxWidth: '100%',
+                boxSizing: 'border-box',
+            }
+        }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} className="no-print">
                 <Typography variant="h4" component="h1" sx={{ color: 'primary.main', fontWeight: 600 }}>
                     Semester List
@@ -479,9 +489,9 @@ const SemesterList = ({ onEdit, onAdd, onViewDetails }) => {
                             <IconButton
                                 onClick={fetchSemesters}
                                 sx={actionButtonStyle}
-                            >
-                                <RefreshIcon />
-                            </IconButton>
+                    >
+                        <RefreshIcon />
+                    </IconButton>
                         </span>
                     </Tooltip>
                     <Tooltip title="Export">
@@ -630,108 +640,109 @@ const SemesterList = ({ onEdit, onAdd, onViewDetails }) => {
                 </Box>
             </Dialog>
 
-            <div id="semesterTable">
-                <SemesterTable
+            <Box sx={{ width: '100%', overflow: 'auto' }}>
+            <SemesterTable
                     semesters={getCurrentPageData()}
-                    onEdit={onEdit}
-                    onDelete={handleDelete}
+                onEdit={onEdit}
+                onDelete={handleDelete}
                     onViewDetails={onViewDetails}
                 />
+            </Box>
 
-                <Box
-                    display="flex"
-                    justifyContent="flex-end"
-                    mt={2}
-                    className="no-print"
+            <Box
+                display="flex"
+                justifyContent="flex-end"
+                mt={2}
+                className="no-print"
+                sx={{
+                    backgroundColor: theme.palette.mode === 'dark' ? '#1f2937' : '#ffffff',
+                    padding: '8px',
+                    borderRadius: '8px',
+                    border: `1px solid ${theme.palette.mode === 'dark' ? '#374151' : '#e2e8f0'}`,
+                    width: '100%',
+                }}
+            >
+                <TablePagination
+                    component="div"
+                    count={filteredSemesters.length}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                    rowsPerPageOptions={[5, 10, 25, 50]}
                     sx={{
-                        backgroundColor: theme.palette.mode === 'dark' ? '#1f2937' : '#ffffff',
-                        padding: '8px',
-                        borderRadius: '8px',
-                        border: `1px solid ${theme.palette.mode === 'dark' ? '#374151' : '#e2e8f0'}`,
-                    }}
-                >
-                    <TablePagination
-                        component="div"
-                        count={filteredSemesters.length}
-                        page={page}
-                        onPageChange={handleChangePage}
-                        rowsPerPage={rowsPerPage}
-                        onRowsPerPageChange={handleChangeRowsPerPage}
-                        rowsPerPageOptions={[5, 10, 25, 50]}
-                        sx={{
-                            '.MuiTablePagination-toolbar': {
-                                color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#000000',
-                                '& > *': {
-                                    color: 'inherit',
-                                },
+                        '.MuiTablePagination-toolbar': {
+                            color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#000000',
+                            '& > *': {
+                                color: 'inherit',
                             },
-                            '.MuiTablePagination-select': {
+                        },
+                        '.MuiTablePagination-select': {
+                            backgroundColor: theme.palette.mode === 'dark' ? '#374151' : '#f8fafc',
+                            color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#000000',
+                            borderRadius: '4px',
+                            padding: '4px 8px',
+                            '&:hover': {
+                                backgroundColor: theme.palette.mode === 'dark' ? '#4b5563' : '#f1f5f9',
+                            },
+                            '&:focus': {
+                                backgroundColor: theme.palette.mode === 'dark' ? '#4b5563' : '#f1f5f9',
+                                outline: 'none',
+                                boxShadow: theme.palette.mode === 'dark'
+                                    ? '0 0 0 2px rgba(59, 130, 246, 0.5)'
+                                    : '0 0 0 2px rgba(37, 99, 235, 0.5)',
+                            },
+                        },
+                        '.MuiTablePagination-selectLabel': {
+                            color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#000000',
+                            marginRight: '8px',
+                        },
+                        '.MuiTablePagination-displayedRows': {
+                            color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#000000',
+                            marginLeft: '8px',
+                        },
+                        '.MuiTablePagination-actions': {
+                            marginLeft: '16px',
+                            '& .MuiIconButton-root': {
+                                color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#000000',
                                 backgroundColor: theme.palette.mode === 'dark' ? '#374151' : '#f8fafc',
-                                color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#000000',
-                                borderRadius: '4px',
-                                padding: '4px 8px',
+                                border: `1px solid ${theme.palette.mode === 'dark' ? '#4b5563' : '#e2e8f0'}`,
+                                margin: '0 4px',
+                                padding: '4px',
+                                '&.Mui-disabled': {
+                                    color: theme.palette.mode === 'dark' ? '#6b7280' : '#cbd5e1',
+                                    backgroundColor: theme.palette.mode === 'dark' ? '#1f2937' : '#f1f5f9',
+                                    border: `1px solid ${theme.palette.mode === 'dark' ? '#374151' : '#e2e8f0'}`,
+                                },
+                                '&:hover:not(.Mui-disabled)': {
+                                    backgroundColor: theme.palette.mode === 'dark' ? '#4b5563' : '#e2e8f0',
+                                },
+                            },
+                        },
+                        '.MuiSelect-icon': {
+                            color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#000000',
+                        },
+                        '.MuiTablePagination-menuItem': {
+                            backgroundColor: theme.palette.mode === 'dark' ? '#1f2937' : '#ffffff',
+                            color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#000000',
+                            '&:hover': {
+                                backgroundColor: theme.palette.mode === 'dark' ? '#374151' : '#f8fafc',
+                            },
+                            '&.Mui-selected': {
+                                backgroundColor: theme.palette.mode === 'dark' ? '#3b82f6' : '#2563eb',
+                                color: '#ffffff',
                                 '&:hover': {
-                                    backgroundColor: theme.palette.mode === 'dark' ? '#4b5563' : '#f1f5f9',
-                                },
-                                '&:focus': {
-                                    backgroundColor: theme.palette.mode === 'dark' ? '#4b5563' : '#f1f5f9',
-                                    outline: 'none',
-                                    boxShadow: theme.palette.mode === 'dark'
-                                        ? '0 0 0 2px rgba(59, 130, 246, 0.5)'
-                                        : '0 0 0 2px rgba(37, 99, 235, 0.5)',
+                                    backgroundColor: theme.palette.mode === 'dark' ? '#2563eb' : '#1d4ed8',
                                 },
                             },
-                            '.MuiTablePagination-selectLabel': {
-                                color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#000000',
-                                marginRight: '8px',
-                            },
-                            '.MuiTablePagination-displayedRows': {
-                                color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#000000',
-                                marginLeft: '8px',
-                            },
-                            '.MuiTablePagination-actions': {
-                                marginLeft: '16px',
-                                '& .MuiIconButton-root': {
-                                    color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#000000',
-                                    backgroundColor: theme.palette.mode === 'dark' ? '#374151' : '#f8fafc',
-                                    border: `1px solid ${theme.palette.mode === 'dark' ? '#4b5563' : '#e2e8f0'}`,
-                                    margin: '0 4px',
-                                    padding: '4px',
-                                    '&.Mui-disabled': {
-                                        color: theme.palette.mode === 'dark' ? '#6b7280' : '#cbd5e1',
-                                        backgroundColor: theme.palette.mode === 'dark' ? '#1f2937' : '#f1f5f9',
-                                        border: `1px solid ${theme.palette.mode === 'dark' ? '#374151' : '#e2e8f0'}`,
-                                    },
-                                    '&:hover:not(.Mui-disabled)': {
-                                        backgroundColor: theme.palette.mode === 'dark' ? '#4b5563' : '#e2e8f0',
-                                    },
-                                },
-                            },
-                            '.MuiSelect-icon': {
-                                color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#000000',
-                            },
-                            '.MuiTablePagination-menuItem': {
-                                backgroundColor: theme.palette.mode === 'dark' ? '#1f2937' : '#ffffff',
-                                color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#000000',
-                                '&:hover': {
-                                    backgroundColor: theme.palette.mode === 'dark' ? '#374151' : '#f8fafc',
-                                },
-                                '&.Mui-selected': {
-                                    backgroundColor: theme.palette.mode === 'dark' ? '#3b82f6' : '#2563eb',
-                                    color: '#ffffff',
-                                    '&:hover': {
-                                        backgroundColor: theme.palette.mode === 'dark' ? '#2563eb' : '#1d4ed8',
-                                    },
-                                },
-                            },
-                            '.MuiMenu-paper': {
-                                backgroundColor: theme.palette.mode === 'dark' ? '#1f2937' : '#ffffff',
-                                border: `1px solid ${theme.palette.mode === 'dark' ? '#374151' : '#e2e8f0'}`,
-                            },
-                        }}
-                    />
-                </Box>
-            </div>
+                        },
+                        '.MuiMenu-paper': {
+                            backgroundColor: theme.palette.mode === 'dark' ? '#1f2937' : '#ffffff',
+                            border: `1px solid ${theme.palette.mode === 'dark' ? '#374151' : '#e2e8f0'}`,
+                        },
+                    }}
+                />
+            </Box>
 
             <Snackbar
                 open={notification.open}

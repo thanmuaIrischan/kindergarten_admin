@@ -1,6 +1,7 @@
 .home-container {
+    display: flex;
     min-height: 100vh;
-    background-color: #f5f5f5;
+    background-color: var(--background-color, #f5f5f5);
 }
 
 .header {
@@ -65,10 +66,33 @@
 
 .main-content {
     flex: 1;
-    padding: 2.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: margin-left 0.3s ease;
+}
+
+.main-content.expanded {
+    margin-left: 80px;
+}
+
+.main-content.full {
+    margin-left: 0;
+}
+
+.content-wrapper {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+.content {
+    flex: 1;
+    padding: 2rem;
     overflow-y: auto;
-    background: var(--background-color);
-    transition: background-color 0.3s ease;
+    transition: margin-right 0.3s ease;
+    min-width: 0;
 }
 
 .main-content h2 {
@@ -87,7 +111,7 @@
     align-items: center;
     height: 100vh;
     font-size: 1.2rem;
-    color: var(--text-color);
+    color: var(--text-color, #333);
 }
 
 .home-layout {
@@ -359,13 +383,15 @@
 }
 
 .calendar-panel-header {
+    padding: 1rem;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 1.2rem;
-    width: 100%;
-    font-size: 1.1rem;
-    font-weight: bold;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-color, #e0e0e0);
+}
+
+.calendar-panel-content {
+    padding: 1rem;
 }
 
 .calendar-month-dropdown select {
@@ -491,50 +517,45 @@
 }
 
 .header-container {
+    padding: 1rem 2rem;
+    background-color: var(--container-bg, #fff);
+    border-bottom: 1px solid var(--border-color, #e0e0e0);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #e6f0fa;
-    padding: 10px 20px;
-    border-radius: 25px;
-    margin: 15px 0;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 100%;
 }
 
 .search-bar {
     display: flex;
     align-items: center;
-    flex-grow: 1;
-    margin-right: 20px;
-    max-width: 300px;
+    background-color: var(--input-bg, #f8f9fa);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    width: 100%;
+    max-width: 400px;
 }
 
 .search-icon {
-    font-size: 1.2rem;
-    margin-right: 10px;
-    color: #6c757d;
+    color: var(--text-light, #6c757d);
+    margin-right: 0.5rem;
 }
 
 .form-control {
     border: none;
     background: transparent;
-    box-shadow: none;
-    font-size: 1rem;
-    color: #6c757d;
+    color: var(--text-color, #333);
     width: 100%;
 }
 
 .form-control:focus {
     outline: none;
-    box-shadow: none;
 }
 
 .theme-toggle {
     display: flex;
     align-items: center;
-    height: 40px;
-    min-width: 120px;
-    gap: 0;
+    gap: 0.5rem;
 }
 
 .switch {
@@ -542,8 +563,6 @@
     display: inline-block;
     width: 50px;
     height: 24px;
-    margin: 0 10px;
-    vertical-align: middle;
 }
 
 .switch input {
@@ -559,10 +578,9 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(to right, #4a90e2, #87ceeb);
-    transition: 0.4s;
+    background-color: var(--toggle-bg, #ccc);
+    transition: .4s;
     border-radius: 24px;
-    height: 24px;
 }
 
 .slider:before {
@@ -573,12 +591,12 @@
     left: 2px;
     bottom: 2px;
     background-color: white;
-    transition: 0.4s;
+    transition: .4s;
     border-radius: 50%;
 }
 
 input:checked+.slider {
-    background: linear-gradient(to right, #4a90e2, #87ceeb);
+    background-color: var(--primary-color, #4a90e2);
 }
 
 input:checked+.slider:before {
@@ -635,7 +653,8 @@ body.dark-mode .search-icon {
     --border-color: #404040;
     --text-color: #f5f5f5;
     --text-light: #b0b0b0;
-    --shadow-color: rgba(0, 0, 0, 0.3);
+    --input-bg: #333;
+    --toggle-bg: #666;
 }
 
 .home-layout.dark .sidebar {
@@ -651,4 +670,52 @@ body.dark-mode .search-icon {
     background: var(--container-bg);
     border-left-color: var(--border-color);
     box-shadow: -2px 0 8px var(--shadow-color);
+}
+
+/* Calendar Panel Styles */
+.calendar-panel {
+    width: 340px;
+    min-width: 340px;
+    height: calc(100vh - 64px);
+    /* Subtract header height */
+    background: var(--container-bg, #fff);
+    border-left: 1px solid var(--border-color, #e0e0e0);
+    margin-top: -1px;
+    /* Align with header border */
+    transition: width 0.3s ease, min-width 0.3s ease;
+    overflow-y: auto;
+}
+
+.calendar-panel.collapsed {
+    width: 80px;
+    min-width: 80px;
+}
+
+/* Add styles for semester components */
+.semester-form-container,
+.semester-list-container,
+.semester-details-container {
+    max-width: 100%;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* Ensure proper Paper component sizing */
+.MuiPaper-root {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Responsive styles */
+@media (max-width: 1200px) {
+    .content {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .content {
+        padding: 1rem;
+    }
 }
