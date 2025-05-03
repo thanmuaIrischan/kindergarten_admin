@@ -5,7 +5,10 @@
     border-right: 1px solid var(--border-color, #e0e0e0);
     display: flex;
     flex-direction: column;
-    transition: width 0.3s ease, min-width 0.3s ease;
+    transition: all 0.3s ease;
+    height: 100vh;
+    position: relative;
+    z-index: 1000;
 }
 
 .sidebar.collapsed {
@@ -19,6 +22,7 @@
     align-items: center;
     gap: 0.75rem;
     border-bottom: 1px solid var(--border-color, #e0e0e0);
+    background: var(--container-bg, #fff);
 }
 
 .sidebar-logo {
@@ -35,6 +39,7 @@
     flex: 1;
     padding: 1rem 0;
     overflow-y: auto;
+    background: var(--container-bg, #fff);
 }
 
 .sidebar-item {
@@ -45,6 +50,7 @@
     color: var(--text-light, #666);
     cursor: pointer;
     transition: all 0.2s ease;
+    position: relative;
 }
 
 .sidebar-item svg {
@@ -72,6 +78,16 @@
     font-weight: 500;
 }
 
+.sidebar-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background-color: var(--primary-color, #4a90e2);
+}
+
 .sidebar-item span {
     white-space: nowrap;
     overflow: hidden;
@@ -84,6 +100,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    background: var(--container-bg, #fff);
 }
 
 .sidebar-logout,
@@ -93,13 +110,14 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem;
+    padding: 0.75rem;
     border: none;
     background: none;
     color: var(--text-light, #666);
     cursor: pointer;
-    transition: color 0.2s ease;
+    transition: all 0.2s ease;
     width: 100%;
+    border-radius: 6px;
 }
 
 .sidebar.collapsed .sidebar-logout,
@@ -119,6 +137,7 @@
 .sidebar-collapse-btn:hover,
 .sidebar-show-btn:hover {
     color: var(--primary-color, #4a90e2);
+    background-color: var(--hover-bg, rgba(74, 144, 226, 0.1));
 }
 
 .sidebar-show-btn {
@@ -127,9 +146,10 @@
     left: 1rem;
     width: auto;
     background-color: var(--container-bg, #fff);
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     z-index: 100;
+    padding: 0.75rem;
 }
 
 .sidebar-collapse-btn {
@@ -139,29 +159,73 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: none;
-    border: none;
-    color: var(--text-light, #666);
-    cursor: pointer;
-    transition: color 0.2s ease;
+    border-radius: 6px;
     flex-shrink: 0;
-}
-
-.sidebar-collapse-btn:hover {
-    color: var(--primary-color, #4a90e2);
 }
 
 .sidebar.collapsed .sidebar-logo {
     display: none;
 }
 
+/* Scrollbar styling */
+.sidebar-nav::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background-color: var(--border-color, #e0e0e0);
+    border-radius: 3px;
+}
+
 /* Dark mode specific styles */
 .dark .sidebar {
-    --container-bg: #2d2d2d;
-    --border-color: #404040;
-    --text-color: #f5f5f5;
-    --text-light: #b0b0b0;
-    --hover-bg: rgba(74, 144, 226, 0.2);
-    --active-bg: rgba(74, 144, 226, 0.25);
-    --primary-color: #4a90e2;
+    --container-bg: #1a1a1a;
+    --border-color: #2d2d2d;
+    --text-color: #ffffff;
+    --text-light: #d1d5db;
+    --hover-bg: rgba(96, 165, 250, 0.15);
+    --active-bg: rgba(96, 165, 250, 0.2);
+    --primary-color: #60a5fa;
+}
+
+.dark .sidebar-show-btn {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Additional dark mode text enhancements */
+.dark .sidebar-logo {
+    color: #ffffff;
+}
+
+.dark .sidebar-item {
+    color: #d1d5db;
+}
+
+.dark .sidebar-item:hover {
+    color: #60a5fa;
+    background-color: rgba(96, 165, 250, 0.15);
+}
+
+.dark .sidebar-item.active {
+    color: #60a5fa;
+    background-color: rgba(96, 165, 250, 0.2);
+}
+
+.dark .sidebar-logout,
+.dark .sidebar-hide-btn,
+.dark .sidebar-collapse-btn,
+.dark .sidebar-show-btn {
+    color: #d1d5db;
+}
+
+.dark .sidebar-logout:hover,
+.dark .sidebar-hide-btn:hover,
+.dark .sidebar-collapse-btn:hover,
+.dark .sidebar-show-btn:hover {
+    color: #60a5fa;
+    background-color: rgba(96, 165, 250, 0.15);
 }

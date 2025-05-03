@@ -12,36 +12,45 @@ import {
     MenuItem,
     CircularProgress,
     useTheme,
+    Stack,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { createClass } from '../api/class.api';
+import { getAllTeachers } from '../../teacher/api/teacher.api';
+import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
-const AddClass = () => {
+const AddClass = ({ onBack }) => {
     const theme = useTheme();
-    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         className: '',
         teacherID: '',
         semesterID: '',
+        teacherName: '',
     });
     const [loading, setLoading] = useState(false);
     const [teachers, setTeachers] = useState([]);
     const [semesters, setSemesters] = useState([]);
-    const [searchTeacher, setSearchTeacher] = useState('');
     const [teacherLoading, setTeacherLoading] = useState(false);
 
     useEffect(() => {
         fetchSemesters();
+        fetchAllTeachers();
     }, []);
 
-    useEffect(() => {
-        if (searchTeacher) {
-            searchTeachers();
+    const fetchAllTeachers = async () => {
+        setTeacherLoading(true);
+        try {
+            const response = await getAllTeachers();
+            setTeachers(response.data || []);
+        } catch (error) {
+            console.error('Error fetching teachers:', error);
+        } finally {
+            setTeacherLoading(false);
         }
-    }, [searchTeacher]);
+    };
 
     const fetchSemesters = async () => {
         try {
@@ -52,33 +61,29 @@ const AddClass = () => {
         }
     };
 
-    const searchTeachers = async () => {
-        setTeacherLoading(true);
-        try {
-            const response = await axios.get(`${API_URL}/teacher/search?query=${searchTeacher}`);
-            setTeachers(response.data.data || []);
-        } catch (error) {
-            console.error('Error searching teachers:', error);
-        } finally {
-            setTeacherLoading(false);
-        }
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
-            await createClass(formData);
-            navigate('/classes', {
-                state: {
-                    notification: {
-                        type: 'success',
-                        message: 'Class created successfully'
-                    }
-                }
-            });
+            const classData = {
+                className: formData.className,
+                teacherID: formData.teacherID,
+                semesterID: formData.semesterID,
+            };
+            await createClass(classData);
+            if (onBack) {
+                onBack({
+                    type: 'success',
+                    message: `Class "${formData.className}" has been successfully created with teacher ${formData.teacherName}`,
+                    open: true
+                });
+            }
         } catch (error) {
             console.error('Error creating class:', error);
+            setFormData(prev => ({
+                ...prev,
+                error: 'Failed to create class. Please try again.'
+            }));
         } finally {
             setLoading(false);
         }
@@ -93,178 +98,212 @@ const AddClass = () => {
     };
 
     return (
-        <Box sx={{ p: 3 }}>
+        <Box
+            className="class-form-container"
+            sx={{
+                width: '100%',
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column'
+            }}
+        >
             <Paper
-                component="form"
-                onSubmit={handleSubmit}
+                elevation={0}
                 sx={{
                     p: 3,
-                    backgroundColor: theme.palette.mode === 'dark' ? '#1f2937' : '#ffffff',
-                    borderRadius: '8px',
-                    border: `1px solid ${theme.palette.mode === 'dark' ? '#374151' : '#e2e8f0'}`,
-                    boxShadow: theme.palette.mode === 'dark'
-                        ? '0 4px 6px rgba(0, 0, 0, 0.4)'
-                        : '0 2px 4px rgba(0, 0, 0, 0.1)',
+                    backgroundColor: theme.palette.background.paper,
+                    width: '100%',
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    boxSizing: 'border-box',
                 }}
             >
-                <Typography variant="h5" component="h2" sx={{ mb: 3, color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#1f2937' }}>
-                    Add New Class
-                </Typography>
-
-                <Box sx={{ mb: 3 }}>
-                    <TextField
-                        fullWidth
-                        label="Class Name"
-                        name="className"
-                        value={formData.className}
-                        onChange={handleInputChange}
-                        required
+                <Box display="flex" alignItems="center" mb={3}>
+                    <Button
+                        startIcon={<ArrowBackIcon />}
+                        onClick={onBack}
                         sx={{
-                            '& .MuiOutlinedInput-root': {
-                                '& fieldset': {
-                                    borderColor: theme.palette.mode === 'dark' ? '#374151' : '#e2e8f0',
-                                },
-                                '&:hover fieldset': {
-                                    borderColor: theme.palette.mode === 'dark' ? '#4b5563' : '#cbd5e1',
-                                },
-                                '&.Mui-focused fieldset': {
-                                    borderColor: theme.palette.mode === 'dark' ? '#3b82f6' : '#2563eb',
-                                },
-                            },
-                            '& .MuiInputLabel-root': {
-                                color: theme.palette.mode === 'dark' ? '#9ca3af' : '#64748b',
-                            },
-                            '& .MuiInputBase-input': {
-                                color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#1f2937',
-                            },
+                            mr: 2,
+                            color: theme.palette.mode === 'dark' ? '#ffffff' : '#2c3e50',
+                            '&:hover': {
+                                backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(44, 62, 80, 0.08)',
+                            }
                         }}
-                    />
+                    >
+                        Back to List
+                    </Button>
+                    <Typography variant="h6" color="primary">
+                        Add New Class
+                    </Typography>
                 </Box>
 
-                <Box sx={{ mb: 3 }}>
-                    <Autocomplete
-                        options={teachers}
-                        getOptionLabel={(option) => `${option.firstName} ${option.lastName} (ID: ${option.teacherID})`}
-                        loading={teacherLoading}
-                        onInputChange={(event, newValue) => {
-                            setSearchTeacher(newValue);
+                <Box
+                    component="form"
+                    onSubmit={handleSubmit}
+                    sx={{
+                        flex: 1,
+                        display: 'flex',
+                        flexDirection: 'column'
+                    }}
+                >
+                    <Stack
+                        spacing={3}
+                        sx={{
+                            width: '100%',
+                            flex: 1
                         }}
-                        onChange={(event, newValue) => {
-                            setFormData(prev => ({
-                                ...prev,
-                                teacherID: newValue ? newValue.teacherID : ''
-                            }));
-                        }}
-                        renderInput={(params) => (
-                            <TextField
-                                {...params}
-                                label="Search Teacher"
-                                required
-                                InputProps={{
-                                    ...params.InputProps,
-                                    endAdornment: (
-                                        <>
-                                            {teacherLoading ? <CircularProgress color="inherit" size={20} /> : null}
-                                            {params.InputProps.endAdornment}
-                                        </>
-                                    ),
-                                }}
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        '& fieldset': {
-                                            borderColor: theme.palette.mode === 'dark' ? '#374151' : '#e2e8f0',
-                                        },
-                                        '&:hover fieldset': {
-                                            borderColor: theme.palette.mode === 'dark' ? '#4b5563' : '#cbd5e1',
-                                        },
-                                        '&.Mui-focused fieldset': {
-                                            borderColor: theme.palette.mode === 'dark' ? '#3b82f6' : '#2563eb',
-                                        },
-                                    },
-                                    '& .MuiInputLabel-root': {
-                                        color: theme.palette.mode === 'dark' ? '#9ca3af' : '#64748b',
-                                    },
-                                    '& .MuiInputBase-input': {
-                                        color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#1f2937',
-                                    },
-                                }}
-                            />
-                        )}
-                        renderOption={(props, option) => (
-                            <Box component="li" {...props}>
-                                <Box>
-                                    <Typography variant="body1">
-                                        {option.firstName} {option.lastName}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        ID: {option.teacherID} • Phone: {option.phone}
-                                    </Typography>
-                                </Box>
-                            </Box>
-                        )}
-                    />
-                </Box>
-
-                <Box sx={{ mb: 3 }}>
-                    <FormControl fullWidth>
-                        <InputLabel id="semester-label" sx={{ color: theme.palette.mode === 'dark' ? '#9ca3af' : '#64748b' }}>
-                            Semester
-                        </InputLabel>
-                        <Select
-                            labelId="semester-label"
-                            name="semesterID"
-                            value={formData.semesterID}
+                    >
+                        <TextField
+                            fullWidth
+                            label="Class Name"
+                            name="className"
+                            value={formData.className}
                             onChange={handleInputChange}
                             required
                             sx={{
-                                '& .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: theme.palette.mode === 'dark' ? '#374151' : '#e2e8f0',
+                                '& .MuiOutlinedInput-root': {
+                                    '& fieldset': {
+                                        borderColor: theme.palette.mode === 'dark' ? '#374151' : '#e2e8f0',
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: theme.palette.mode === 'dark' ? '#4b5563' : '#cbd5e1',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: theme.palette.mode === 'dark' ? '#3b82f6' : '#2563eb',
+                                    },
                                 },
-                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: theme.palette.mode === 'dark' ? '#4b5563' : '#cbd5e1',
+                                '& .MuiInputLabel-root': {
+                                    color: theme.palette.mode === 'dark' ? '#9ca3af' : '#64748b',
                                 },
-                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: theme.palette.mode === 'dark' ? '#3b82f6' : '#2563eb',
+                                '& .MuiInputBase-input': {
+                                    color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#1f2937',
                                 },
-                                color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#1f2937',
                             }}
-                        >
-                            {semesters.map((semester) => (
-                                <MenuItem key={semester.id} value={semester.id}>
-                                    {semester.semesterName}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                </Box>
+                        />
 
-                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                    <Button
-                        type="button"
-                        onClick={() => navigate('/classes')}
-                        sx={{
-                            color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#1f2937',
-                            '&:hover': {
-                                backgroundColor: theme.palette.mode === 'dark' ? '#374151' : '#f1f5f9',
-                            },
-                        }}
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        type="submit"
-                        variant="contained"
-                        disabled={loading}
-                        sx={{
-                            backgroundColor: theme.palette.mode === 'dark' ? '#3498db' : '#2980b9',
-                            color: '#ffffff',
-                            '&:hover': {
-                                backgroundColor: theme.palette.mode === 'dark' ? '#2980b9' : '#2472a4',
-                            },
-                        }}
-                    >
-                        {loading ? <CircularProgress size={24} /> : 'Create Class'}
-                    </Button>
+                        <Autocomplete
+                            options={teachers}
+                            getOptionLabel={(option) => `${option.firstName} ${option.lastName} (ID: ${option.teacherID})`}
+                            loading={teacherLoading}
+                            onChange={(event, newValue) => {
+                                setFormData(prev => ({
+                                    ...prev,
+                                    teacherID: newValue ? newValue.teacherID : '',
+                                    teacherName: newValue ? `${newValue.firstName} ${newValue.lastName}` : ''
+                                }));
+                            }}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label="Select Teacher"
+                                    required
+                                    InputProps={{
+                                        ...params.InputProps,
+                                        endAdornment: (
+                                            <>
+                                                {teacherLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                                                {params.InputProps.endAdornment}
+                                            </>
+                                        ),
+                                    }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: theme.palette.mode === 'dark' ? '#374151' : '#e2e8f0',
+                                            },
+                                            '&:hover fieldset': {
+                                                borderColor: theme.palette.mode === 'dark' ? '#4b5563' : '#cbd5e1',
+                                            },
+                                            '&.Mui-focused fieldset': {
+                                                borderColor: theme.palette.mode === 'dark' ? '#3b82f6' : '#2563eb',
+                                            },
+                                        },
+                                        '& .MuiInputLabel-root': {
+                                            color: theme.palette.mode === 'dark' ? '#9ca3af' : '#64748b',
+                                        },
+                                        '& .MuiInputBase-input': {
+                                            color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#1f2937',
+                                        },
+                                    }}
+                                />
+                            )}
+                            renderOption={(props, option) => (
+                                <Box component="li" {...props}>
+                                    <Box>
+                                        <Typography variant="body1">
+                                            {option.firstName} {option.lastName}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            ID: {option.teacherID} • Phone: {option.phone}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            )}
+                        />
+
+                        <FormControl fullWidth>
+                            <InputLabel id="semester-label" sx={{ color: theme.palette.mode === 'dark' ? '#9ca3af' : '#64748b' }}>
+                                Semester
+                            </InputLabel>
+                            <Select
+                                labelId="semester-label"
+                                name="semesterID"
+                                value={formData.semesterID}
+                                onChange={handleInputChange}
+                                required
+                                sx={{
+                                    '& .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: theme.palette.mode === 'dark' ? '#374151' : '#e2e8f0',
+                                    },
+                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: theme.palette.mode === 'dark' ? '#4b5563' : '#cbd5e1',
+                                    },
+                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                        borderColor: theme.palette.mode === 'dark' ? '#3b82f6' : '#2563eb',
+                                    },
+                                    color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#1f2937',
+                                }}
+                            >
+                                {semesters.map((semester) => (
+                                    <MenuItem key={semester.id} value={semester.id}>
+                                        {semester.semesterName}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+
+                        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                            <Button
+                                type="button"
+                                onClick={onBack}
+                                sx={{
+                                    color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#1f2937',
+                                    '&:hover': {
+                                        backgroundColor: theme.palette.mode === 'dark' ? '#374151' : '#f1f5f9',
+                                    },
+                                    minWidth: '120px',
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                disabled={loading}
+                                sx={{
+                                    backgroundColor: theme.palette.mode === 'dark' ? '#3498db' : '#2980b9',
+                                    color: '#ffffff',
+                                    '&:hover': {
+                                        backgroundColor: theme.palette.mode === 'dark' ? '#2980b9' : '#2472a4',
+                                    },
+                                    minWidth: '120px',
+                                }}
+                            >
+                                {loading ? <CircularProgress size={24} /> : 'Create Class'}
+                            </Button>
+                        </Box>
+                    </Stack>
                 </Box>
             </Paper>
         </Box>

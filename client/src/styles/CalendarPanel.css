@@ -9,6 +9,14 @@
     --event-orange-dot: #fd7e14;
 }
 
+/* Dark mode event colors */
+.dark {
+    --event-blue: rgba(0, 123, 255, 0.2);
+    --event-pink: rgba(255, 105, 180, 0.2);
+    --event-green: rgba(40, 167, 69, 0.2);
+    --event-orange: rgba(253, 126, 20, 0.2);
+}
+
 .calendar-panel {
     width: 340px;
     min-width: 340px;
@@ -264,19 +272,111 @@
 /* Dark mode styles */
 .dark .calendar-panel,
 .dark .calendar-panel-collapsed {
-    background: var(--container-bg, #1a1a1a);
-    border-color: var(--border-color, #2d2d2d);
+    --container-bg: #1a1a1a;
+    --border-color: #2d2d2d;
+    --text-color: #ffffff;
+    --text-light: #d1d5db;
+    --bg-light: #262626;
+    --hover-bg: rgba(96, 165, 250, 0.15);
+    --primary-color: #60a5fa;
+    background: var(--container-bg);
+    border-left-color: var(--border-color);
+}
+
+.dark .calendar-panel-header span {
+    color: var(--text-color);
 }
 
 .dark .calendar-grid {
-    background: var(--bg-dark, #2d2d2d);
+    background: #262626;
+}
+
+.dark .calendar-header span {
+    color: var(--text-light);
+}
+
+.dark .day {
+    color: var(--text-light);
+}
+
+.dark .day:hover {
+    background-color: var(--hover-bg);
+    color: var(--text-color);
+}
+
+.dark .day.today {
+    background-color: var(--primary-color);
+    color: #ffffff;
+}
+
+.dark .day.selected {
+    background-color: var(--hover-bg);
+    color: var(--primary-color);
+}
+
+.dark .calendar-month-dropdown select {
+    background: #262626;
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+.dark .calendar-clock {
+    color: var(--text-light);
+}
+
+.dark .calendar-events-header span {
+    color: var(--text-color);
+}
+
+.dark .calendar-see-all {
+    color: var(--primary-color);
 }
 
 .dark .calendar-event-card {
-    background: var(--bg-dark, #2d2d2d);
+    background: #262626;
+}
+
+.dark .calendar-event-title {
+    color: var(--text-color);
+}
+
+.dark .calendar-event-time,
+.dark .calendar-event-location {
+    color: var(--text-light);
+}
+
+.dark .calendar-collapse-btn,
+.dark .calendar-hide-btn,
+.dark .calendar-show-btn {
+    color: var(--text-light);
+    background: var(--container-bg);
+}
+
+.dark .calendar-collapse-btn:hover,
+.dark .calendar-hide-btn:hover,
+.dark .calendar-show-btn:hover {
+    color: var(--primary-color);
+    background-color: var(--hover-bg);
 }
 
 .dark .calendar-show-btn {
-    background: var(--container-bg, #1a1a1a);
-    border-color: var(--border-color, #2d2d2d);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Scrollbar styling for dark mode */
+.dark .calendar-panel-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dark .calendar-panel-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.dark .calendar-panel-content::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 3px;
+}
+
+.dark .calendar-panel-content::-webkit-scrollbar-thumb:hover {
+    background-color: #404040;
 }

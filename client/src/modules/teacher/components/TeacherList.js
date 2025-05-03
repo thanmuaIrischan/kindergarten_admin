@@ -306,16 +306,51 @@ const TeacherList = ({ onAdd, onEdit, onViewDetails }) => {
                         placeholder="Search teachers..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        sx={{ minWidth: 240 }}
+                        sx={{
+                            minWidth: 240,
+                            '& .MuiOutlinedInput-root': {
+                                backgroundColor: theme.palette.mode === 'dark' ? '#1f2937' : '#ffffff',
+                                '& fieldset': {
+                                    borderColor: theme.palette.mode === 'dark' ? '#374151' : '#e2e8f0',
+                                },
+                                '&:hover fieldset': {
+                                    borderColor: theme.palette.mode === 'dark' ? '#4b5563' : '#cbd5e1',
+                                },
+                                '&.Mui-focused fieldset': {
+                                    borderColor: theme.palette.mode === 'dark' ? '#3b82f6' : '#2563eb',
+                                },
+                            },
+                            '& .MuiInputBase-input': {
+                                color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#1f2937',
+                                '&::placeholder': {
+                                    color: theme.palette.mode === 'dark' ? '#9ca3af' : '#64748b',
+                                    opacity: 1,
+                                },
+                            },
+                            '& .MuiInputAdornment-root': {
+                                '& .MuiSvgIcon-root': {
+                                    color: theme.palette.mode === 'dark' ? '#9ca3af' : '#64748b',
+                                },
+                            },
+                        }}
                         InputProps={{
                             startAdornment: (
                                 <InputAdornment position="start">
-                                    <SearchIcon sx={{ color: 'action.active' }} />
+                                    <SearchIcon />
                                 </InputAdornment>
                             ),
                             endAdornment: searchTerm && (
                                 <InputAdornment position="end">
-                                    <IconButton size="small" onClick={() => setSearchTerm('')}>
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => setSearchTerm('')}
+                                        sx={{
+                                            color: theme.palette.mode === 'dark' ? '#9ca3af' : '#64748b',
+                                            '&:hover': {
+                                                color: theme.palette.mode === 'dark' ? '#e5e7eb' : '#1f2937',
+                                            },
+                                        }}
+                                    >
                                         <ClearIcon />
                                     </IconButton>
                                 </InputAdornment>
