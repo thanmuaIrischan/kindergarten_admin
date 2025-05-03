@@ -14,6 +14,10 @@ import EditClass from '../../modules/class/components/EditClass';
 import SemesterList from '../../modules/semester/SemesterList';
 import SemesterForm from '../../modules/semester/components/SemesterForm';
 import SemesterDetails from '../../modules/semester/components/SemesterDetails';
+import TeacherList from '../../modules/teacher/components/TeacherList';
+import AddTeacher from '../../modules/teacher/components/AddTeacher';
+import EditTeacher from '../../modules/teacher/components/EditTeacher';
+import TeacherDetails from '../../modules/teacher/components/TeacherDetails';
 import { useTheme } from '../../context/ThemeContext';
 import axios from 'axios';
 import '../../styles/Home.css';
@@ -33,19 +37,19 @@ const Home = () => {
     const [visible, setVisible] = useState(true);
     const [calendarCollapsed, setCalendarCollapsed] = useState(false);
     const [calendarVisible, setCalendarVisible] = useState(true);
-    const [studentAction, setStudentAction] = useState(null); // 'list', 'add', 'edit', or 'view'
+    const [studentAction, setStudentAction] = useState(null);
     const [selectedStudentId, setSelectedStudentId] = useState(null);
     const [selectedStudent, setSelectedStudent] = useState(null);
-    const [semesterAction, setSemesterAction] = useState(null); // 'list', 'add', or 'edit'
+    const [semesterAction, setSemesterAction] = useState(null);
     const [selectedSemester, setSelectedSemester] = useState(null);
-    const [classAction, setClassAction] = useState(null); // 'list', 'create', 'edit'
+    const [classAction, setClassAction] = useState(null);
     const [selectedClassId, setSelectedClassId] = useState(null);
+    const [teacherAction, setTeacherAction] = useState('list');
+    const [selectedTeacher, setSelectedTeacher] = useState(null);
     const { isDark, toggleTheme } = useTheme();
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
-        console.log('Stored User:', storedUser); // Debug log
-
         if (!storedUser) {
             navigate('/login');
             return;
@@ -53,12 +57,9 @@ const Home = () => {
 
         try {
             const parsedUser = JSON.parse(storedUser);
-            console.log('Parsed User:', parsedUser); // Debug log
-
             if (!parsedUser || !parsedUser.fullName) {
                 throw new Error('Invalid user data');
             }
-
             setUser(parsedUser);
         } catch (error) {
             console.error('Error parsing user data:', error);
@@ -70,7 +71,7 @@ const Home = () => {
     }, [navigate]);
 
     useEffect(() => {
-        // Reset student action when changing main navigation
+        // Reset actions when changing main navigation
         if (selected !== 'students') {
             setStudentAction(null);
             setSelectedStudentId(null);
@@ -78,27 +79,26 @@ const Home = () => {
         } else if (!studentAction) {
             setStudentAction('list');
         }
-    }, [selected]);
 
-    useEffect(() => {
-        // Reset semester action when changing main navigation
         if (selected !== 'semester') {
             setSemesterAction(null);
             setSelectedSemester(null);
         } else if (!semesterAction) {
             setSemesterAction('list');
         }
-    }, [selected]);
 
-    useEffect(() => {
-        // Reset class action when changing main navigation
         if (selected !== 'class') {
             setClassAction(null);
             setSelectedClassId(null);
         } else if (!classAction) {
             setClassAction('list');
         }
-    }, [selected]);
+
+        // Initialize teacher action to list only when first navigating to teachers
+        if (selected === 'teachers' && !teacherAction) {
+            setTeacherAction('list');
+        }
+    }, [selected, studentAction, semesterAction, classAction, teacherAction]);
 
     const handleLogout = () => {
         localStorage.removeItem('user');
@@ -166,6 +166,24 @@ const Home = () => {
     const handleBackToClassList = () => {
         setClassAction('list');
         setSelectedClassId(null);
+    };
+
+    const handleTeacherAdd = () => {
+        setTeacherAction('add');
+    };
+
+    const handleBackToTeacherList = () => {
+        setTeacherAction('list');
+    };
+
+    const handleTeacherEdit = (teacher) => {
+        setSelectedTeacher(teacher);
+        setTeacherAction('edit');
+    };
+
+    const handleTeacherView = (teacher) => {
+        setSelectedTeacher(teacher);
+        setTeacherAction('view');
     };
 
     if (isLoading) {
@@ -245,6 +263,31 @@ const Home = () => {
         }
     };
 
+    const renderTeacherContent = () => {
+        switch (teacherAction) {
+            case 'list':
+                return <TeacherList
+                    onAdd={handleTeacherAdd}
+                    onEdit={handleTeacherEdit}
+                    onViewDetails={handleTeacherView}
+                />;
+            case 'add':
+                return <AddTeacher onBack={handleBackToTeacherList} />;
+            case 'edit':
+                return <EditTeacher
+                    teacher={selectedTeacher}
+                    onBack={handleBackToTeacherList}
+                />;
+            case 'view':
+                return <TeacherDetails
+                    teacher={selectedTeacher}
+                    onBack={handleBackToTeacherList}
+                />;
+            default:
+                return null;
+        }
+    };
+
     return (
         <div className={`home-container ${isDark ? 'dark' : ''}`}>
             <Sidebar
@@ -268,6 +311,7 @@ const Home = () => {
                         {selected === 'students' && renderStudentContent()}
                         {selected === 'class' && renderClassContent()}
                         {selected === 'semester' && renderSemesterContent()}
+                        {selected === 'teachers' && renderTeacherContent()}
                     </div>
                     {calendarVisible && (
                         <CalendarPanel

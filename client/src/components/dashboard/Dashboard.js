@@ -1,5 +1,6 @@
 import React from 'react';
 import '../../styles/Dashboard.css';
+import TeacherTable from './TeacherTable';
 
 const Dashboard = () => {
     return (
@@ -68,6 +69,8 @@ const Dashboard = () => {
                     </div>
                 </div>
             </div>
+
+            <TeacherTable />
         </div>
     );
 };
