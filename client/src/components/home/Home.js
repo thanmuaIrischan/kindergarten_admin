@@ -25,6 +25,8 @@ import '../../styles/Sidebar.css';
 import '../../styles/CalendarPanel.css';
 import '../../styles/ContentHeader.css';
 import { FaChevronLeft } from 'react-icons/fa';
+import { Box } from '@mui/material';
+import ClassDetails from '../../modules/class/components/ClassDetails';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
@@ -44,9 +46,11 @@ const Home = () => {
     const [selectedSemester, setSelectedSemester] = useState(null);
     const [classAction, setClassAction] = useState(null);
     const [selectedClassId, setSelectedClassId] = useState(null);
+    const [selectedClass, setSelectedClass] = useState(null);
     const [teacherAction, setTeacherAction] = useState('list');
     const [selectedTeacher, setSelectedTeacher] = useState(null);
     const { isDark, toggleTheme } = useTheme();
+    const [notification, setNotification] = useState(null);
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -163,9 +167,15 @@ const Home = () => {
         setClassAction('edit');
     };
 
-    const handleBackToClassList = () => {
+    const handleBackToClassList = (notification = null) => {
         setClassAction('list');
         setSelectedClassId(null);
+        if (notification) {
+            setNotification({
+                message: notification.message || notification,
+                type: notification.type || 'success'
+            });
+        }
     };
 
     const handleTeacherAdd = () => {
@@ -184,6 +194,11 @@ const Home = () => {
     const handleTeacherView = (teacher) => {
         setSelectedTeacher(teacher);
         setTeacherAction('view');
+    };
+
+    const handleClassView = (classItem) => {
+        setSelectedClass(classItem);
+        setClassAction('view');
     };
 
     if (isLoading) {
@@ -253,11 +268,29 @@ const Home = () => {
                 return <ClassList
                     onEdit={handleClassEdit}
                     onAdd={handleClassCreate}
+                    onViewDetails={handleClassView}
+                    notification={notification}
                 />;
             case 'create':
-                return <AddClass onBack={handleBackToClassList} />;
+                return (
+                    <Box sx={{ width: '100%', maxWidth: '100%', p: 2 }}>
+                        <AddClass onBack={handleBackToClassList} />
+                    </Box>
+                );
             case 'edit':
                 return <EditClass id={selectedClassId} onBack={handleBackToClassList} />;
+            case 'view':
+                return <ClassDetails
+                    classData={selectedClass}
+                    onBack={() => {
+                        setClassAction('list');
+                        setSelectedClass(null);
+                    }}
+                    onEditStudent={(studentId) => {
+                        // Handle student edit/view here
+                        console.log('Edit student:', studentId);
+                    }}
+                />;
             default:
                 return null;
         }

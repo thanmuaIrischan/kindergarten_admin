@@ -1,135 +1,327 @@
-.dashboard {
-    padding: 20px;
+.school-intro {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0.5rem;
 }
 
-.dashboard h2 {
-    margin: 0 0 10px;
-    color: var(--text-color);
-}
-
-.dashboard p {
-    color: var(--text-color-light);
-    margin-bottom: 30px;
-}
-
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-}
-
-.dashboard-card {
+/* Hero Section */
+.hero-section {
+    text-align: center;
+    padding: 1rem;
     background-color: var(--bg-color);
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 15px;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow-md);
 }
 
-.dashboard-card h3 {
-    margin: 0 0 20px;
+.hero-section h1 {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 0.25rem;
+}
+
+.hero-section h3 {
+    font-size: 1.5rem;
     color: var(--text-color);
+    margin-bottom: 0.25rem;
+}
+
+.hero-section .subtitle {
+    font-size: 1.1rem;
+    color: var(--text-color-light);
+    margin-bottom: 1rem;
+}
+
+.hero-image {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+}
+
+.hero-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.hero-image:hover img {
+    transform: scale(1.02);
+}
+
+/* Features Grid */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.feature-card {
+    background: var(--bg-color);
+    border-radius: 10px;
+    padding: 0.75rem;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+}
+
+.feature-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.feature-image {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover .feature-image {
+    transform: scale(1.05);
+}
+
+.feature-card h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.25rem;
     font-size: 1.2rem;
 }
 
-/* Stats Grid */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 15px;
+.feature-card p {
+    color: var(--text-color);
+    line-height: 1.3;
+    font-size: 0.9rem;
 }
 
-.stat-item {
+/* About Section */
+.about-section {
+    background: var(--bg-color);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow-md);
+}
+
+.about-content h2 {
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+    font-size: 1.5rem;
+}
+
+.about-content p {
+    color: var(--text-color);
+    line-height: 1.4;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.key-points {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
     text-align: center;
 }
 
-.stat-value {
-    display: block;
-    font-size: 2rem;
-    font-weight: bold;
-    color: var(--primary-color);
-    margin-bottom: 5px;
+.point {
+    padding: 0.75rem;
+    background: var(--bg-color-light);
+    border-radius: 10px;
+    transition: transform 0.3s ease;
 }
 
-.stat-label {
+.point:hover {
+    transform: translateY(-2px);
+}
+
+.point-number {
+    display: block;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 0.2rem;
+}
+
+.point-label {
     color: var(--text-color-light);
     font-size: 0.9rem;
 }
 
-/* Activity List */
-.activity-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+/* Programs Section */
+.programs-section {
+    margin-bottom: 1rem;
 }
 
-.activity-list li {
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border-color);
-    color: var(--text-color);
+.programs-section h2 {
+    color: var(--primary-color);
+    text-align: center;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
 }
 
-.activity-list li:last-child {
-    border-bottom: none;
-}
-
-/* Quick Actions */
-.quick-actions {
+.programs-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
 }
 
-.quick-actions button {
-    padding: 10px;
-    background-color: var(--bg-color-light);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    color: var(--text-color);
-    cursor: pointer;
-    transition: all 0.2s;
+.program-card {
+    background: var(--bg-color);
+    border-radius: 10px;
+    padding: 1rem;
+    box-shadow: var(--shadow-md);
+    transition: transform 0.3s ease;
 }
 
-.quick-actions button:hover {
-    background-color: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
+.program-card:hover {
+    transform: translateY(-2px);
 }
 
-/* Status List */
-.status-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.program-card h4 {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    margin-bottom: 0.2rem;
 }
 
-.status-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-}
-
-.status-label {
-    color: var(--text-color);
-}
-
-.status-value {
-    padding: 4px 8px;
-    border-radius: 12px;
+.program-card p {
+    color: var(--text-color-light);
+    margin-bottom: 0.5rem;
     font-size: 0.9rem;
 }
 
-.status-value.online {
-    background-color: var(--success-color-light);
-    color: var(--success-color);
+.program-card ul {
+    list-style-type: none;
+    padding: 0;
 }
 
-.status-value.warning {
-    background-color: var(--warning-color-light);
-    color: var(--warning-color);
+.program-card li {
+    color: var(--text-color);
+    padding: 0.3rem 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.9rem;
 }
 
-.status-value.error {
-    background-color: var(--danger-color-light);
-    color: var(--danger-color);
+.program-card li:last-child {
+    border-bottom: none;
+}
+
+/* Contact Section */
+.contact-section {
+    background: var(--bg-color);
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+}
+
+.contact-section h2 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+}
+
+.contact-section>p {
+    color: var(--text-color);
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.contact-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1rem;
+    text-align: left;
+}
+
+.info-item {
+    padding: 0.75rem;
+    background: var(--bg-color-light);
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+}
+
+.info-item:hover {
+    transform: translateY(-2px);
+}
+
+.info-item strong {
+    color: var(--primary-color);
+    display: block;
+    margin-bottom: 0.2rem;
+    font-size: 0.95rem;
+}
+
+.info-item p {
+    color: var(--text-color);
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+/* Dark Mode Styles */
+.dark .school-intro {
+    --bg-color: #1a1a1a;
+    --bg-color-light: #262626;
+    --text-color: #e5e7eb;
+    --text-color-light: #9ca3af;
+    --border-color: #2d2d2d;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 1rem 0.75rem;
+    }
+
+    .hero-section h1 {
+        font-size: 1.8rem;
+    }
+
+    .hero-section h3 {
+        font-size: 1.3rem;
+    }
+
+    .hero-section .subtitle {
+        font-size: 1rem;
+    }
+
+    .school-intro {
+        padding: 0.5rem;
+    }
+
+    .about-section,
+    .contact-section {
+        padding: 1rem;
+    }
+
+    .feature-image {
+        height: 150px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-section h1 {
+        font-size: 1.6rem;
+    }
+
+    .hero-section h3 {
+        font-size: 1.2rem;
+    }
+
+    .hero-section .subtitle {
+        font-size: 0.95rem;
+    }
+
+    .feature-image {
+        height: 140px;
+    }
+
+    .point-number {
+        font-size: 1.6rem;
+    }
 }

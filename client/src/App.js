@@ -6,6 +6,7 @@ import Login from './components/auth/Login';
 import ForgotPassword from './components/auth/ForgotPassword';
 import Home from './components/home/Home';
 import { ThemeProvider } from './context/ThemeContext';
+import './styles/variables.css';
 import './App.css';
 
 const App = () => {
