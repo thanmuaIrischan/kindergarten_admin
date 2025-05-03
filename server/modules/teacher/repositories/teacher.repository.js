@@ -160,16 +160,36 @@ class TeacherRepository {
 
     async findByTeacherId(teacherID) {
         try {
+            if (!teacherID) {
+                console.log('No teacherID provided to findByTeacherId');
+                return null;
+            }
+
+            const normalizedTeacherId = teacherID.trim();
+            console.log('Searching for teacher with normalized ID:', normalizedTeacherId);
+
             const snapshot = await db.collection(teacherCollection)
-                .where('teacherID', '==', teacherID)
+                .where('teacherID', '==', normalizedTeacherId)
                 .get();
 
+            console.log('Query snapshot:', {
+                empty: snapshot.empty,
+                size: snapshot.size,
+                docs: snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    teacherID: doc.data().teacherID
+                }))
+            });
+
             if (snapshot.empty) {
+                console.log(`No teacher found with teacherID: ${normalizedTeacherId}`);
                 return null;
             }
 
             const doc = snapshot.docs[0];
             const data = doc.data();
+            console.log('Found teacher data:', data);
+
             return {
                 id: doc.id,
                 firstName: data.firstName || '',
@@ -181,7 +201,8 @@ class TeacherRepository {
                 avatar: data.avatar || ''
             };
         } catch (error) {
-            throw new Error(`Error finding teacher by ID: ${error.message}`);
+            console.error('Error in findByTeacherId:', error);
+            throw new Error(`Error finding teacher by teacherID: ${error.message}`);
         }
     }
 

@@ -129,6 +129,23 @@ class TeacherController {
             }
         });
     });
+
+    // @desc    Get teacher by teacherID
+    // @route   GET /api/teacher/by-teacher-id/:teacherID
+    // @access  Public
+    getTeacherByTeacherId = asyncHandler(async (req, res) => {
+        console.log('Searching for teacher with ID:', req.params.teacherID);
+
+        const teacher = await this.teacherRepository.findByTeacherId(req.params.teacherID);
+        console.log('Found teacher:', teacher);
+
+        if (!teacher) {
+            console.log('No teacher found with ID:', req.params.teacherID);
+            throw new ErrorResponse(`No teacher found with ID: ${req.params.teacherID}`, 404);
+        }
+
+        res.status(200).json(teacher);  // Return the teacher data directly
+    });
 }
 
 // Create a singleton instance
@@ -143,5 +160,6 @@ module.exports = {
     deleteTeacher: teacherController.deleteTeacher,
     searchTeachers: teacherController.searchTeachers,
     importTeachers: teacherController.importTeachers,
-    getPrintData: teacherController.getPrintData
+    getPrintData: teacherController.getPrintData,
+    getTeacherByTeacherId: teacherController.getTeacherByTeacherId
 }; 

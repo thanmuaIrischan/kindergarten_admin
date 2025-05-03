@@ -8,20 +8,25 @@ const {
     deleteTeacher,
     searchTeachers,
     importTeachers,
-    getPrintData
+    getPrintData,
+    getTeacherByTeacherId
 } = require('../controller/teacher.controller');
+const TeacherRepository = require('../repositories/teacher.repository');
 
-// Import teachers (must be before /:id routes)
+// Import teachers
 router.post('/import', importTeachers);
 
 // Get print data
 router.get('/print', getPrintData);
 
-// Get all teachers
-router.get('/', getAllTeachers);
-
 // Search teachers
 router.get('/search', searchTeachers);
+
+// Get teacher by teacherID - must come before /:id route
+router.get('/by-teacher-id/:teacherID', getTeacherByTeacherId);
+
+// Get all teachers
+router.get('/', getAllTeachers);
 
 // Get teacher by ID
 router.get('/:id', getTeacherById);
@@ -34,5 +39,23 @@ router.put('/:id', updateTeacher);
 
 // Delete teacher
 router.delete('/:id', deleteTeacher);
+
+// Test route to check teacher existence
+router.get('/check/:teacherID', async (req, res) => {
+    try {
+        const teacherRepo = new TeacherRepository();
+        const exists = await teacherRepo.findByTeacherId(req.params.teacherID);
+        res.json({
+            exists: !!exists,
+            teacherID: req.params.teacherID,
+            teacher: exists
+        });
+    } catch (error) {
+        res.status(500).json({
+            error: error.message,
+            teacherID: req.params.teacherID
+        });
+    }
+});
 
 module.exports = router; 
