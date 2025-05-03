@@ -5,7 +5,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 export const getAllTeachers = async () => {
     try {
         const response = await axios.get(`${API_URL}/teacher`);
-        return response.data;
+        return response;
     } catch (error) {
         throw error;
     }

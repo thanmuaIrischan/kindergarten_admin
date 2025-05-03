@@ -1,23 +1,38 @@
 const express = require('express');
 const router = express.Router();
-const TeacherController = require('../controllers/teacher.controller');
+const {
+    getAllTeachers,
+    getTeacherById,
+    createTeacher,
+    updateTeacher,
+    deleteTeacher,
+    searchTeachers,
+    importTeachers,
+    getPrintData
+} = require('../controller/teacher.controller');
+
+// Import teachers (must be before /:id routes)
+router.post('/import', importTeachers);
+
+// Get print data
+router.get('/print', getPrintData);
 
 // Get all teachers
-router.get('/', TeacherController.getAllTeachers);
+router.get('/', getAllTeachers);
 
 // Search teachers
-router.get('/search', TeacherController.searchTeachers);
+router.get('/search', searchTeachers);
 
 // Get teacher by ID
-router.get('/:id', TeacherController.getTeacherById);
+router.get('/:id', getTeacherById);
 
 // Create new teacher
-router.post('/', TeacherController.createTeacher);
+router.post('/', createTeacher);
 
 // Update teacher
-router.put('/:id', TeacherController.updateTeacher);
+router.put('/:id', updateTeacher);
 
 // Delete teacher
-router.delete('/:id', TeacherController.deleteTeacher);
+router.delete('/:id', deleteTeacher);
 
 module.exports = router; 
