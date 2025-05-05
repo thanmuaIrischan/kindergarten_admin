@@ -15,15 +15,12 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Logging middleware
+// Request logging middleware
 app.use((req, res, next) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    if (req.method !== 'GET') {
-        console.log('Request body:', JSON.stringify(req.body, null, 2));
-    }
+    console.log(`${req.method} ${req.url}`);
     next();
 });
 
@@ -45,47 +42,12 @@ app.use((req, res, next) => {
     });
 });
 
-// Error handling middleware
+// Error handler
 app.use((err, req, res, next) => {
-    console.error('Error details:', {
-        message: err.message,
-        stack: err.stack,
-        name: err.name,
-        status: err.statusCode || err.status,
-        path: `${req.method} ${req.url}`,
-        body: req.body
-    });
-
-    // Handle specific error types
-    if (err.name === 'ValidationError') {
-        return res.status(400).json({
-            success: false,
-            message: 'Validation Error',
-            errors: err.errors || err.message
-        });
-    }
-
-    // Handle Firebase errors
-    if (err.code && err.code.startsWith('auth/')) {
-        return res.status(401).json({
-            success: false,
-            message: err.message
-        });
-    }
-
-    // Handle custom ErrorResponse
-    if (err.statusCode) {
-        return res.status(err.statusCode).json({
-            success: false,
-            message: err.message
-        });
-    }
-
-    // Default error
-    res.status(500).json({
+    console.error('Error:', err);
+    res.status(err.status || 500).json({
         success: false,
-        message: 'Internal Server Error',
-        ...(process.env.NODE_ENV === 'development' && { error: err.message, stack: err.stack })
+        message: err.message || 'Internal server error'
     });
 });
 

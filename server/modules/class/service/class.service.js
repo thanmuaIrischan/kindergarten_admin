@@ -31,6 +31,13 @@ class ClassService {
         return this.repository.update(id, classData);
     }
 
+    async updateClassTeacher(id, teacherID) {
+        if (teacherID !== null && (typeof teacherID !== 'string' || teacherID.trim() === '')) {
+            throw new ErrorResponse('Invalid teacher ID provided', 400);
+        }
+        return this.repository.updateTeacher(id, teacherID ? teacherID.trim() : null);
+    }
+
     async deleteClass(id) {
         return this.repository.delete(id);
     }

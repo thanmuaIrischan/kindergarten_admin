@@ -14,6 +14,9 @@ router.post('/', classController.createClass);
 // Update class
 router.put('/:id', classController.updateClass);
 
+// Update class teacher
+router.patch('/:id/teacher', classController.updateClassTeacher);
+
 // Delete class
 router.delete('/:id', classController.deleteClass);
 
