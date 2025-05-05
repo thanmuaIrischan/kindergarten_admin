@@ -247,7 +247,10 @@ const ClassTable = React.forwardRef(({ classes, onEdit, onDelete, onViewDetails 
                                 <Stack direction="row" spacing={1}>
                                     <Tooltip title="View Details">
                                         <IconButton
-                                            onClick={() => onViewDetails(classItem)}
+                                            onClick={() => {
+                                                console.log('View class details:', classItem);
+                                                onViewDetails(classItem);
+                                            }}
                                             size="small"
                                             sx={{
                                                 backgroundColor: theme.palette.mode === 'dark' ? 'rgba(52, 152, 219, 0.2)' : 'rgba(41, 128, 185, 0.1)',
@@ -262,7 +265,7 @@ const ClassTable = React.forwardRef(({ classes, onEdit, onDelete, onViewDetails 
                                             <VisibilityIcon sx={{ fontSize: '1.2rem' }} />
                                         </IconButton>
                                     </Tooltip>
-                                    <Tooltip title="Edit">
+                                    <Tooltip title="Edit Class">
                                         <IconButton
                                             onClick={() => onEdit(classItem)}
                                             size="small"
@@ -279,7 +282,7 @@ const ClassTable = React.forwardRef(({ classes, onEdit, onDelete, onViewDetails 
                                             <EditIcon sx={{ fontSize: '1.2rem' }} />
                                         </IconButton>
                                     </Tooltip>
-                                    <Tooltip title="Delete">
+                                    <Tooltip title="Delete Class">
                                         <IconButton
                                             onClick={() => onDelete(classItem.id)}
                                             size="small"

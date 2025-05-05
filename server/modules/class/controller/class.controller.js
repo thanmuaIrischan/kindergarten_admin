@@ -54,6 +54,19 @@ class ClassController {
         }
     };
 
+    updateClassTeacher = async (req, res, next) => {
+        try {
+            const { teacherID } = req.body;
+            const classData = await this.service.updateClassTeacher(req.params.id, teacherID);
+            res.status(200).json({
+                success: true,
+                data: classData
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
     deleteClass = async (req, res, next) => {
         try {
             await this.service.deleteClass(req.params.id);

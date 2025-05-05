@@ -56,6 +56,7 @@ import TeacherCard from './classDetails/TeacherCard';
 import StudentManagement from './classDetails/StudentManagement';
 import ActionButtons from './classDetails/ActionButtons';
 import StudentTable from './classDetails/StudentTable';
+import ChangeTeacher from './teacherActions/ChangeTeacher';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
@@ -70,9 +71,20 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
     const [openDialog, setOpenDialog] = useState(false);
     const [dialogType, setDialogType] = useState('');
     const [showActions, setShowActions] = useState(true);
+    const [changeTeacherOpen, setChangeTeacherOpen] = useState(false);
 
     useEffect(() => {
-        console.log('ClassData changed:', classData);
+        console.log('ClassDetails - classData changed:', {
+            classData,
+            id: classData?.id,
+            teacherID: classData?.teacherID
+        });
+
+        if (!classData?.id) {
+            console.error('Invalid class data - missing ID:', classData);
+            return;
+        }
+
         fetchStudents();
         if (classData?.teacherID) {
             console.log('Initiating teacher fetch for ID:', classData.teacherID);
@@ -126,10 +138,14 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
     };
 
     const fetchStudents = async () => {
-        if (!classData?.id) return;
+        if (!classData?.id) {
+            console.error('Cannot fetch students - missing class ID');
+            return;
+        }
 
         setLoading(true);
         try {
+            console.log('Fetching students for class:', classData.id);
             const classResponse = await axios.get(`${API_URL}/class/${classData.id}`);
             const classStudents = classResponse.data.data.students || [];
 
@@ -167,11 +183,38 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
     };
 
     const handleTeacherAction = () => {
-        handleActionClick(teacherDetails ? 'changeTeacher' : 'assignTeacher');
+        if (!classData?.id) {
+            console.error('Cannot change teacher - missing class ID');
+            return;
+        }
+
+        console.log('Opening teacher change dialog with:', {
+            classId: classData.id,
+            currentTeacherId: teacherDetails?.teacherID
+        });
+        setChangeTeacherOpen(true);
     };
 
     const handleStudentAction = (action) => {
         handleActionClick(action);
+    };
+
+    const handleTeacherChange = async (newTeacher) => {
+        if (newTeacher) {
+            setTeacherDetails({
+                firstName: newTeacher.firstName || '',
+                lastName: newTeacher.lastName || '',
+                teacherID: newTeacher.teacherID || '',
+                gender: newTeacher.gender || '',
+                phone: newTeacher.phone || '',
+                dateOfBirth: newTeacher.dateOfBirth || '',
+                avatar: newTeacher.avatar || ''
+            });
+            // Update the classData with new teacherID
+            if (classData) {
+                classData.teacherID = newTeacher.teacherID;
+            }
+        }
     };
 
     const TeacherActionButton = ({ hasTeacher }) => (
@@ -514,6 +557,17 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
                     </Grid>
                 </Grid>
             </Paper>
+
+            <ChangeTeacher
+                open={changeTeacherOpen}
+                onClose={() => setChangeTeacherOpen(false)}
+                currentTeacherId={teacherDetails?.teacherID}
+                classId={classData?.id}
+                onTeacherChange={(newTeacher) => {
+                    handleTeacherChange(newTeacher);
+                    setChangeTeacherOpen(false);
+                }}
+            />
         </Box>
     );
 };

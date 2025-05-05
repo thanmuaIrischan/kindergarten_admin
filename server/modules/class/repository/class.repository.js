@@ -1,10 +1,12 @@
 const { db } = require('../../../config/firebase');
 const { toClientFormat, toFirebaseFormat } = require('../model/class.model');
 const ErrorResponse = require('../../../utils/errorResponse');
+const TeacherRepository = require('../../teacher/repositories/teacher.repository');
 
 class ClassRepository {
     constructor() {
         this.collection = db.collection('classes');
+        this.teacherRepository = new TeacherRepository();
         console.log('ClassRepository initialized with collection: classes');
     }
 
@@ -68,12 +70,58 @@ class ClassRepository {
 
     async update(id, classData) {
         try {
+            // Check if class exists
+            const classDoc = await this.collection.doc(id).get();
+            if (!classDoc.exists) {
+                throw new ErrorResponse('Class not found', 404);
+            }
+
+            // If teacherID is being updated, verify the teacher exists
+            if (classData.teacherID) {
+                const teacher = await this.teacherRepository.findByTeacherId(classData.teacherID);
+                if (!teacher) {
+                    throw new ErrorResponse('Teacher not found', 404);
+                }
+            }
+
             const data = toFirebaseFormat(classData);
             await this.collection.doc(id).update(data);
             const updatedDoc = await this.collection.doc(id).get();
             return toClientFormat(updatedDoc);
         } catch (error) {
+            if (error instanceof ErrorResponse) throw error;
             throw new ErrorResponse('Error updating class', 500);
+        }
+    }
+
+    async updateTeacher(id, teacherID) {
+        try {
+            // Check if class exists
+            const classDoc = await this.collection.doc(id).get();
+            if (!classDoc.exists) {
+                throw new ErrorResponse('Class not found', 404);
+            }
+
+            // Verify the new teacher exists if teacherID is provided
+            if (teacherID) {
+                const teacher = await this.teacherRepository.findByTeacherId(teacherID);
+                if (!teacher) {
+                    throw new ErrorResponse('Teacher not found', 404);
+                }
+            }
+
+            // Update only the teacher field and updatedAt timestamp
+            const updateData = {
+                teacherID: teacherID || null,
+                updatedAt: new Date().toISOString()
+            };
+
+            await this.collection.doc(id).update(updateData);
+            const updatedDoc = await this.collection.doc(id).get();
+            return toClientFormat(updatedDoc);
+        } catch (error) {
+            if (error instanceof ErrorResponse) throw error;
+            throw new ErrorResponse('Error updating class teacher', 500);
         }
     }
 

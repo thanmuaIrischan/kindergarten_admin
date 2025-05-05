@@ -3,45 +3,43 @@ const toClientFormat = (doc) => {
     return {
         id: doc.id,
         className: data.className,
-        teacherID: data.teacherID,
-        students: data.students || [],
-        studentsCount: data.students ? data.students.length : 0,
-        semesterID: data.semesterID || null
+        teacherID: data.teacherID || null,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt
     };
 };
 
 const toFirebaseFormat = (classData) => {
     return {
-        className: classData.className,
-        teacherID: classData.teacherID,
-        students: classData.students || [],
-        semesterID: classData.semesterID || null
+        className: classData.className.trim(),
+        teacherID: classData.teacherID ? classData.teacherID.trim() : null,
+        createdAt: classData.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString()
     };
 };
 
-const validateClass = (data) => {
-    const errors = {};
+const validateClass = (classData) => {
+    const errors = [];
 
-    if (!data.className) {
-        errors.className = 'Class name is required';
+    if (!classData.className || typeof classData.className !== 'string' || classData.className.trim() === '') {
+        errors.push('Class name is required');
     }
 
-    if (!data.teacherID) {
-        errors.teacherID = 'Teacher ID is required';
-    }
-
-    if (!data.semesterID) {
-        errors.semesterID = 'Semester ID is required';
+    // Validate teacherID if provided
+    if (classData.teacherID !== undefined && classData.teacherID !== null) {
+        if (typeof classData.teacherID !== 'string' || classData.teacherID.trim() === '') {
+            errors.push('Teacher ID must be a non-empty string if provided');
+        }
     }
 
     return {
-        isValid: Object.keys(errors).length === 0,
-        errors
+        isValid: errors.length === 0,
+        errors: errors.join(', ')
     };
 };
 
 module.exports = {
-    toClientFormat,
+    validateClass,
     toFirebaseFormat,
-    validateClass
+    toClientFormat
 }; 

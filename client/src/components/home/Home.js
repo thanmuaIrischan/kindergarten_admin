@@ -197,6 +197,11 @@ const Home = () => {
     };
 
     const handleClassView = (classItem) => {
+        console.log('Viewing class details:', classItem);
+        if (!classItem || !classItem.id) {
+            console.error('Invalid class data:', classItem);
+            return;
+        }
         setSelectedClass(classItem);
         setClassAction('view');
     };
