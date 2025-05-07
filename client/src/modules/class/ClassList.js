@@ -276,6 +276,24 @@ const ClassList = ({ onEdit, onAdd, onViewDetails }) => {
         return filteredClasses.slice(startIndex, startIndex + rowsPerPage);
     };
 
+    const handleEdit = async (updatedClass) => {
+        try {
+            // Update the local state immediately for a smooth UI update
+            setClasses(prevClasses =>
+                prevClasses.map(classItem =>
+                    classItem.id === updatedClass.id ? updatedClass : classItem
+                )
+            );
+            showNotification('Class updated successfully');
+
+            // Reload the data from the server to ensure consistency
+            await fetchClasses();
+        } catch (error) {
+            console.error('Error reloading classes:', error);
+            showNotification('Error reloading classes', 'error');
+        }
+    };
+
     if (loading) {
         return (
             <Box className="class-list-container" sx={{ width: '100%', maxWidth: '100%' }}>
@@ -494,8 +512,8 @@ const ClassList = ({ onEdit, onAdd, onViewDetails }) => {
                         : '0 2px 4px rgba(0, 0, 0, 0.1)',
                 }}>
                     <ClassTable
-                        classes={getCurrentPageData()} // Use getCurrentPageData to get the paginated filtered classes
-                        onEdit={onEdit}
+                        classes={getCurrentPageData()}
+                        onEdit={handleEdit}
                         onDelete={handleDelete}
                         onViewDetails={onViewDetails}
                         ref={componentRef}
