@@ -228,7 +228,7 @@ const AddStudent = ({ open, onClose, classId, currentStudentIds = [], onStudentA
                                         </Avatar>
                                     </ListItemAvatar>
                                     <ListItemText
-                                        primary={`${student.firstName} ${student.lastName}`}
+                                        primary={`${student.lastName} ${student.firstName}`}
                                         secondary={`Student ID: ${student.studentID}`}
                                     />
                                     <ListItemSecondaryAction>
