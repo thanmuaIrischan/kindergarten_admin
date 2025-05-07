@@ -50,7 +50,6 @@ import {
     AssignmentInd as AssignmentIndIcon,
     SwapHorizontalCircle as SwapTeacherIcon,
 } from '@mui/icons-material';
-import axios from 'axios';
 
 import TeacherCard from './classDetails/TeacherCard';
 import StudentManagement from './classDetails/StudentManagement';
@@ -61,6 +60,10 @@ import ChangeTeacher from './teacherActions/ChangeTeacher';
 import SemesterCard from './classDetails/SemesterCard';
 import ChangeSemester from './semesterActions/ChangeSemester';
 import { AddStudent, RemoveStudent, TransferStudent } from './studentActions';
+import { printStudentList } from '../utils/printUtils';
+import { fetchStudents, addStudentToClass, removeStudentFromClass, transferStudentsToClass } from '../utils/studentUtils';
+import { fetchTeacherDetails, updateTeacher } from '../utils/teacherUtils';
+import { fetchSemesterDetails, updateSemester } from '../utils/semesterUtils';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
@@ -99,151 +102,44 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
             return;
         }
 
-        fetchStudents();
+        loadStudents();
         if (classData?.teacherID) {
             console.log('Initiating teacher fetch for ID:', classData.teacherID);
-            fetchTeacherDetails();
+            loadTeacherDetails();
         } else {
             setTeacherDetails(null);
         }
     }, [classData]);
 
-    const fetchTeacherDetails = async () => {
-        try {
-            if (!classData?.teacherID) {
-                console.log('No teacherID provided');
-                return;
-            }
-
-            setTeacherLoading(true);
-            const teacherId = classData.teacherID.trim();
-            console.log('Fetching teacher details for ID:', teacherId);
-
-            const response = await axios.get(`${API_URL}/teacher/by-teacher-id/${teacherId}`);
-            console.log('Full API Response:', response);
-
-            if (response.data) {
-                console.log('Response data:', response.data);
-                const teacher = response.data;
-                setTeacherDetails({
-                    firstName: teacher.firstName || '',
-                    lastName: teacher.lastName || '',
-                    teacherID: teacher.teacherID || '',
-                    gender: teacher.gender || '',
-                    phone: teacher.phone || '',
-                    dateOfBirth: teacher.dateOfBirth || '',
-                    avatar: teacher.avatar || ''
-                });
-            } else {
-                console.error('Invalid response format:', response);
-                setTeacherDetails(null);
-            }
-        } catch (error) {
-            console.error('Error fetching teacher details:', {
-                message: error.response?.data?.message || error.message,
-                status: error.response?.status,
-                teacherID: classData.teacherID,
-                error: error
-            });
-            setTeacherDetails(null);
-        } finally {
-            setTeacherLoading(false);
-        }
-    };
-
-    const fetchStudents = async () => {
-        if (!classData?.id) {
-            console.error('Cannot fetch students - missing class ID');
-            return;
-        }
-
+    const loadStudents = async () => {
         setLoading(true);
-        try {
-            // Get fresh class data to get the latest student IDs
-            const classResponse = await axios.get(`${API_URL}/class/${classData.id}`);
-            const freshClassData = classResponse.data.data;
-            const studentIDs = freshClassData.students || []; // Using students array that contains studentIDs
-
-            console.log('Fresh class data:', freshClassData);
-            console.log('Student IDs:', studentIDs);
-
-            // Update the class data in state
-            Object.assign(classData, freshClassData);
-
-            if (!studentIDs || studentIDs.length === 0) {
-                console.log('No students found in class');
-                setStudents([]);
-                return;
-            }
-
-            // Fetch each student's details from the student table
-            const studentPromises = studentIDs.map(async (studentId) => {
-                try {
-                    // Get student details from student table using studentId
-                    const response = await axios.get(`${API_URL}/student/${studentId}`);
-                    const studentData = response.data.data;
-                    console.log('Fetched student data:', studentData);
-                    return {
-                        id: studentData.id,
-                        studentID: studentData.studentID,
-                        firstName: studentData.firstName,
-                        lastName: studentData.lastName,
-                        gender: studentData.gender,
-                        dateOfBirth: studentData.dateOfBirth,
-                        phone: studentData.phone,
-                        email: studentData.email,
-                        address: studentData.address,
-                        avatar: studentData.avatar
-                    };
-                } catch (error) {
-                    console.error(`Failed to fetch student ${studentId}:`, error);
-                    return null;
-                }
-            });
-
-            const studentResponses = await Promise.all(studentPromises);
-            const validStudents = studentResponses.filter(Boolean);
-
-            console.log('Fetched student details:', validStudents);
-            setStudents(validStudents);
-        } catch (error) {
-            console.error('Error in fetchStudents:', error);
-            setStudents([]);
-        } finally {
-            setLoading(false);
-        }
+        const fetchedStudents = await fetchStudents(classData.id);
+        setStudents(fetchedStudents);
+        setLoading(false);
     };
 
-    const fetchSemesterDetails = async () => {
+    const loadTeacherDetails = async () => {
+        setTeacherLoading(true);
+        const teacher = await fetchTeacherDetails(classData.teacherID);
+        setTeacherDetails(teacher);
+        setTeacherLoading(false);
+    };
+
+    const loadSemesterDetails = async () => {
         if (!classData?.semesterID) {
-            console.log('No semesterID provided');
             setSemester(null);
             return;
         }
 
         setSemesterLoading(true);
-        try {
-            console.log('Fetching semester details for ID:', classData.semesterID);
-            const response = await axios.get(`${API_URL}/semester/${classData.semesterID}`);
-
-            if (response.data && response.data.data) {
-                console.log('Fetched semester details:', response.data.data);
-                setSemester(response.data.data);
-            } else {
-                console.error('Invalid semester response:', response.data);
-                setSemester(null);
-            }
-        } catch (error) {
-            console.error('Error fetching semester details:', error);
-            setSemester(null);
-        } finally {
-            setSemesterLoading(false);
-        }
+        const semesterData = await fetchSemesterDetails(classData.semesterID);
+        setSemester(semesterData);
+        setSemesterLoading(false);
     };
 
     useEffect(() => {
         if (classData?.semesterID) {
-            fetchSemesterDetails();
+            loadSemesterDetails();
         } else {
             setSemester(null);
         }
@@ -278,13 +174,14 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
 
     const handleStudentAction = (action, student = null, selectedStudents = []) => {
         if (action === 'transferStudent' && selectedStudents.length > 0) {
-            // For multiple student transfer, we don't need to set selectedStudent
             setSelectedStudent(null);
             setSelectedStudentsForTransfer(selectedStudents);
         } else if (action === 'transferStudent' && student) {
-            // For single student transfer
             setSelectedStudent(student);
             setSelectedStudentsForTransfer([]);
+        } else if (action === 'printStudents') {
+            printStudentList(classData, students, teacherDetails, semester);
+            return;
         } else {
             setSelectedStudent(student);
             setSelectedStudentsForTransfer([]);
@@ -306,12 +203,7 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
     };
 
     const handleTeacherChange = async (newTeacher, updatedClass) => {
-        if (!newTeacher) return;
-
-        try {
-            console.log('Handling teacher change:', { newTeacher, updatedClass });
-
-            // Update teacher details
+        await updateTeacher(newTeacher, updatedClass, classData, async () => {
             setTeacherDetails({
                 firstName: newTeacher.firstName || '',
                 lastName: newTeacher.lastName || '',
@@ -321,26 +213,9 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
                 dateOfBirth: newTeacher.dateOfBirth || '',
                 avatar: newTeacher.avatar || ''
             });
-
-            // Update class data while preserving existing data
-            if (updatedClass && classData) {
-                Object.assign(classData, {
-                    ...classData,
-                    ...updatedClass,
-                    students: updatedClass.students || classData.students || [], // Preserve students array
-                    semesterID: updatedClass.semesterID || classData.semesterID
-                });
-                console.log('Updated class data:', classData);
-            }
-
-            // Fetch fresh student data
-            await fetchStudents();
-
-            // Close the dialog
+            await loadStudents();
             setChangeTeacherOpen(false);
-        } catch (error) {
-            console.error('Error in handleTeacherChange:', error);
-        }
+        });
     };
 
     const handleViewChange = (mode) => {
@@ -348,7 +223,7 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
     };
 
     const handleReloadStudents = () => {
-        fetchStudents();
+        loadStudents();
     };
 
     const handleChangeSemester = () => {
@@ -356,47 +231,35 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
     };
 
     const handleSemesterChange = async (newSemester, updatedClass) => {
-        try {
-            if (!newSemester || !updatedClass) {
-                console.error('Invalid semester change data:', { newSemester, updatedClass });
-                return;
-            }
-
+        await updateSemester(newSemester, updatedClass, classData, async () => {
             setSemester(newSemester);
-            // Update the class data with the new information
-            Object.assign(classData, updatedClass);
-            // Refresh the semester details
-            await fetchSemesterDetails();
-            // Refresh students list as it might be affected by semester change
-            await fetchStudents();
-        } catch (error) {
-            console.error('Error in handleSemesterChange:', error);
-        }
+            await loadSemesterDetails();
+            await loadStudents();
+        });
     };
 
     const handleStudentAdd = async (student, updatedClass) => {
-        console.log('Student added:', student);
-        await fetchStudents();
-        setAddStudentOpen(false);
+        await addStudentToClass(student, classData.id, async () => {
+            await loadStudents();
+            setAddStudentOpen(false);
+        });
     };
 
     const handleStudentRemove = async (student, updatedClass) => {
-        console.log('Student removed:', student);
-        await fetchStudents();
-        setRemoveStudentOpen(false);
-        setSelectedStudent(null);
+        await removeStudentFromClass(student, classData.id, async () => {
+            await loadStudents();
+            setRemoveStudentOpen(false);
+            setSelectedStudent(null);
+        });
     };
 
     const handleStudentTransfer = async (students, targetClass, updatedClass) => {
-        try {
-            console.log('Students transferred:', { students, targetClass });
-            await fetchStudents();
+        await transferStudentsToClass(students, targetClass, classData.id, async () => {
+            await loadStudents();
             setTransferStudentOpen(false);
             setSelectedStudent(null);
             setSelectedStudentsForTransfer([]);
-        } catch (error) {
-            console.error('Error in handleStudentTransfer:', error);
-        }
+        });
     };
 
     const TeacherActionButton = ({ hasTeacher }) => (
@@ -711,7 +574,7 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
                                 <StudentManagement
                                     studentCount={students.length}
                                     onAction={handleStudentAction}
-                                    selectedStudentCount={selectedStudentsForTransfer.length}
+                                    selectedStudents={selectedStudentsForTransfer}
                                 />
                             </Grid>
                             <Grid item xs={12}>

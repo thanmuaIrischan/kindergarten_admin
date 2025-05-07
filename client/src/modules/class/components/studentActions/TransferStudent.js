@@ -176,7 +176,7 @@ const TransferStudent = ({ open, onClose, currentClassId, student, students = []
                 <Box sx={{ mb: 2 }}>
                     <Typography variant="subtitle1" gutterBottom>
                         {mode === 'single'
-                            ? `Transfer ${student?.firstName} ${student?.lastName} to:`
+                            ? `Transfer ${student?.lastName} ${student?.firstName} to:`
                             : `Transfer ${students.length} students to:`}
                     </Typography>
                     {mode === 'multiple' && (
@@ -185,7 +185,7 @@ const TransferStudent = ({ open, onClose, currentClassId, student, students = []
                                 <Chip
                                     key={student.studentID}
                                     icon={<PersonIcon />}
-                                    label={`${student.firstName} ${student.lastName}`}
+                                    label={` ${student.lastName} ${student.firstName}`}
                                     size="small"
                                     sx={{ m: 0.5 }}
                                 />

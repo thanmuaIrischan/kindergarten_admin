@@ -104,13 +104,65 @@ const StudentTable = ({
             sx={{
                 width: '100%',
                 overflow: 'hidden',
-                border: theme => `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                border: theme => `1px solid ${theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.12)' : 'rgba(0, 0, 0, 0.1)'}`,
                 borderRadius: 2,
-                backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                backgroundColor: theme => theme.palette.mode === 'dark' ? '#fff' : 'rgba(0, 0, 0, 0.02)',
+                '& .MuiTable-root': {
+                    backgroundColor: theme => theme.palette.mode === 'dark' ? '#fff' : 'inherit',
+                },
+                '& .MuiTable-root.MuiTable-stickyHeader': {
+                    backgroundColor: theme => theme.palette.mode === 'dark' ? '#fff' : 'inherit',
+                },
+                '& .MuiTableCell-root': {
+                    backgroundColor: theme => theme.palette.mode === 'dark' ? '#fff' : 'inherit',
+                    color: theme => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : 'inherit',
+                    borderBottom: theme => `1px solid ${theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.12)' : 'rgba(224, 224, 224, 1)'}`,
+                },
+                '& .MuiTableHead-root .MuiTableCell-root': {
+                    backgroundColor: theme => theme.palette.mode === 'dark' ? '#fff' : 'inherit',
+                    color: theme => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : 'inherit',
+                    fontWeight: 600,
+                },
+                '& .MuiTableRow-root:hover': {
+                    backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.04)' : 'rgba(0, 0, 0, 0.04)',
+                },
+                '& .MuiTableRow-root.Mui-selected': {
+                    backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(25, 118, 210, 0.08)' : 'rgba(25, 118, 210, 0.08)',
+                },
+                '& .MuiTablePagination-root': {
+                    color: theme => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : 'inherit',
+                    borderTop: theme => `1px solid ${theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.12)' : 'rgba(224, 224, 224, 1)'}`,
+                },
+                '& .MuiTablePagination-select': {
+                    color: theme => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : 'inherit',
+                },
+                '& .MuiTablePagination-selectIcon': {
+                    color: theme => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.54)' : 'inherit',
+                },
+                '& .MuiIconButton-root': {
+                    color: theme => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.54)' : 'inherit',
+                    '&:hover': {
+                        backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.04)' : 'rgba(0, 0, 0, 0.04)',
+                    },
+                },
+                '& .MuiCheckbox-root': {
+                    color: theme => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.54)' : 'inherit',
+                },
+                '& .MuiTooltip-tooltip': {
+                    backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : 'rgba(97, 97, 97, 0.92)',
+                    color: theme => theme.palette.mode === 'dark' ? '#fff' : '#fff',
+                },
             }}
         >
             <TableContainer sx={{ maxHeight: 440 }}>
-                <Table stickyHeader>
+                <Table stickyHeader sx={{
+                    '&.MuiTable-root': {
+                        backgroundColor: theme => theme.palette.mode === 'dark' ? '#fff' : 'inherit',
+                    },
+                    '&.MuiTable-stickyHeader': {
+                        backgroundColor: theme => theme.palette.mode === 'dark' ? '#fff' : 'inherit',
+                    }
+                }}>
                     <TableHead>
                         <TableRow>
                             <TableCell padding="checkbox">

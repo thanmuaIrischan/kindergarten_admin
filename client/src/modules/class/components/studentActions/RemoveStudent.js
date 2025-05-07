@@ -285,7 +285,7 @@ const RemoveStudent = ({ open, onClose, classId, student = null, students = [], 
                                             </Avatar>
                                         </ListItemAvatar>
                                         <ListItemText
-                                            primary={`${student.firstName} ${student.lastName}`}
+                                            primary={` ${student.lastName} ${student.firstName}`}
                                             secondary={`Student ID: ${student.studentID}`}
                                         />
                                         <ListItemSecondaryAction>
