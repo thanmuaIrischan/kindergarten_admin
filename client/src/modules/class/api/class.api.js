@@ -6,7 +6,13 @@ const CLASS_API = `${API_BASE_URL}/class`;
 export const getAllClasses = async () => {
     try {
         const response = await axios.get(CLASS_API);
-        console.log('Raw API Response:', response);
+        console.log('Raw API Response:', {
+            response,
+            data: response.data,
+            classes: response.data.data,
+            structure: JSON.stringify(response.data)
+        });
+
         // Ensure we're returning the correct structure
         if (response.data && !response.data.data) {
             // If the data is not wrapped in a data property, wrap it

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Table,
     TableBody,
@@ -13,11 +13,15 @@ import {
     Box,
     Typography,
     CircularProgress,
+    Stack,
+    Checkbox,
+    Button,
 } from '@mui/material';
 import {
     Edit as EditIcon,
     Delete as DeleteIcon,
     Visibility as VisibilityIcon,
+    SwapHoriz as SwapHorizIcon,
 } from '@mui/icons-material';
 
 const StudentTable = ({
@@ -30,7 +34,70 @@ const StudentTable = ({
     onViewStudent,
     onEditStudent,
     onDeleteStudent,
+    onAction,
 }) => {
+    const [selectedStudents, setSelectedStudents] = useState([]);
+
+    const handleSelectAllClick = (event) => {
+        if (event.target.checked) {
+            setSelectedStudents(students);
+        } else {
+            setSelectedStudents([]);
+        }
+    };
+
+    const handleSelectStudent = (student) => {
+        setSelectedStudents(prev => {
+            const isSelected = prev.some(s => s.studentID === student.studentID);
+            if (isSelected) {
+                return prev.filter(s => s.studentID !== student.studentID);
+            } else {
+                return [...prev, student];
+            }
+        });
+    };
+
+    const ActionButtons = ({ student }) => (
+        <Stack direction="row" spacing={1}>
+            <Tooltip title="Edit Student">
+                <IconButton
+                    size="small"
+                    onClick={() => onEditStudent(student)}
+                    sx={{
+                        color: 'primary.main',
+                        '&:hover': { backgroundColor: 'primary.lighter' }
+                    }}
+                >
+                    <EditIcon fontSize="small" />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Transfer Student">
+                <IconButton
+                    size="small"
+                    onClick={() => onAction('transferStudent', student)}
+                    sx={{
+                        color: 'info.main',
+                        '&:hover': { backgroundColor: 'info.lighter' }
+                    }}
+                >
+                    <SwapHorizIcon fontSize="small" />
+                </IconButton>
+            </Tooltip>
+            <Tooltip title="Remove Student">
+                <IconButton
+                    size="small"
+                    onClick={() => onAction('removeStudent', student)}
+                    sx={{
+                        color: 'error.main',
+                        '&:hover': { backgroundColor: 'error.lighter' }
+                    }}
+                >
+                    <DeleteIcon fontSize="small" />
+                </IconButton>
+            </Tooltip>
+        </Stack>
+    );
+
     return (
         <Paper
             elevation={0}
@@ -46,18 +113,25 @@ const StudentTable = ({
                 <Table stickyHeader>
                     <TableHead>
                         <TableRow>
+                            <TableCell padding="checkbox">
+                                <Checkbox
+                                    color="primary"
+                                    indeterminate={selectedStudents.length > 0 && selectedStudents.length < students.length}
+                                    checked={students.length > 0 && selectedStudents.length === students.length}
+                                    onChange={handleSelectAllClick}
+                                />
+                            </TableCell>
                             <TableCell>Student ID</TableCell>
                             <TableCell>Name</TableCell>
                             <TableCell>Gender</TableCell>
                             <TableCell>Date of Birth</TableCell>
-                            <TableCell>Parent Name</TableCell>
                             <TableCell align="center">Actions</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={6} align="center">
+                                <TableCell colSpan={7} align="center">
                                     <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
                                         <CircularProgress />
                                     </Box>
@@ -65,7 +139,7 @@ const StudentTable = ({
                             </TableRow>
                         ) : students.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} align="center">
+                                <TableCell colSpan={7} align="center">
                                     <Typography variant="body1" color="text.secondary">
                                         No students found
                                     </Typography>
@@ -74,58 +148,57 @@ const StudentTable = ({
                         ) : (
                             students
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                .map((student) => (
-                                    <TableRow
-                                        hover
-                                        key={student.id}
-                                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                                    >
-                                        <TableCell>{student.studentID}</TableCell>
-                                        <TableCell>{`${student.firstName} ${student.lastName}`}</TableCell>
-                                        <TableCell>{student.gender}</TableCell>
-                                        <TableCell>{student.dateOfBirth}</TableCell>
-                                        <TableCell>{student.parentName}</TableCell>
-                                        <TableCell align="center">
-                                            <Tooltip title="View Details">
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() => onViewStudent(student)}
-                                                >
-                                                    <VisibilityIcon fontSize="small" />
-                                                </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title="Edit Student">
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() => onEditStudent(student)}
-                                                >
-                                                    <EditIcon fontSize="small" />
-                                                </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title="Delete Student">
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() => onDeleteStudent(student)}
-                                                >
-                                                    <DeleteIcon fontSize="small" />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
+                                .map((student) => {
+                                    const isSelected = selectedStudents.some(s => s.studentID === student.studentID);
+                                    return (
+                                        <TableRow
+                                            hover
+                                            key={student.id}
+                                            selected={isSelected}
+                                            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                        >
+                                            <TableCell padding="checkbox">
+                                                <Checkbox
+                                                    color="primary"
+                                                    checked={isSelected}
+                                                    onChange={() => handleSelectStudent(student)}
+                                                />
+                                            </TableCell>
+                                            <TableCell>{student.studentID}</TableCell>
+                                            <TableCell>{` ${student.lastName} ${student.firstName} `}</TableCell>
+                                            <TableCell>{student.gender}</TableCell>
+                                            <TableCell>{student.dateOfBirth}</TableCell>
+                                            <TableCell align="center">
+                                                <ActionButtons student={student} />
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })
                         )}
                     </TableBody>
                 </Table>
             </TableContainer>
-            <TablePagination
-                rowsPerPageOptions={[5, 10, 25]}
-                component="div"
-                count={students.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={onChangePage}
-                onRowsPerPageChange={onChangeRowsPerPage}
-            />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
+                {selectedStudents.length > 0 && (
+                    <Button
+                        variant="contained"
+                        color="info"
+                        startIcon={<SwapHorizIcon />}
+                        onClick={() => onAction('transferStudent', null, selectedStudents)}
+                    >
+                        Transfer Selected ({selectedStudents.length})
+                    </Button>
+                )}
+                <TablePagination
+                    rowsPerPageOptions={[5, 10, 25]}
+                    component="div"
+                    count={students.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={onChangePage}
+                    onRowsPerPageChange={onChangeRowsPerPage}
+                />
+            </Box>
         </Paper>
     );
 };

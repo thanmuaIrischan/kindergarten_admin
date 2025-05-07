@@ -531,7 +531,7 @@ const ClassList = ({ onEdit, onAdd, onViewDetails }) => {
                                 Teacher: {classItem.teacherID}
                             </Typography>
                             <Typography variant="body2" sx={{ mb: 2 }}>
-                                Students: {classItem.students ? classItem.students.length : 0}
+                                Students: {classItem.studentCount || 0}
                             </Typography>
                             <Stack direction="row" spacing={1}>
                                 <IconButton

@@ -4,17 +4,18 @@ const toClientFormat = (doc) => {
         id: doc.id,
         className: data.className,
         teacherID: data.teacherID || null,
-        createdAt: data.createdAt,
-        updatedAt: data.updatedAt
+        students: data.students || [],
+        semesterID: data.semesterID || null
     };
 };
 
 const toFirebaseFormat = (classData) => {
+    // Only include essential fields
     return {
         className: classData.className.trim(),
         teacherID: classData.teacherID ? classData.teacherID.trim() : null,
-        createdAt: classData.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        students: classData.students || [],
+        semesterID: classData.semesterID || null
     };
 };
 

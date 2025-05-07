@@ -54,14 +54,20 @@ const ChangeTeacher = ({ open, onClose, currentTeacherId, classId, onTeacherChan
         try {
             setLoading(true);
             setError(null);
-            const response = await axios.get(`${API_URL}/teacher/search`, {
-                params: { query: searchQuery }
-            });
+            const response = await axios.get(`${API_URL}/teacher`);
 
-            // Filter out the current teacher from the list
-            const filteredTeachers = response.data.filter(
-                teacher => teacher.teacherID !== currentTeacherId
-            );
+            // Filter out the current teacher and filter by search query if present
+            const filteredTeachers = response.data
+                .filter(teacher => teacher.teacherID !== currentTeacherId)
+                .filter(teacher => {
+                    if (!searchQuery) return true;
+                    const searchLower = searchQuery.toLowerCase();
+                    return (
+                        teacher.firstName.toLowerCase().includes(searchLower) ||
+                        teacher.lastName.toLowerCase().includes(searchLower) ||
+                        teacher.teacherID.toLowerCase().includes(searchLower)
+                    );
+                });
 
             setTeachers(filteredTeachers);
         } catch (error) {
@@ -88,35 +94,41 @@ const ChangeTeacher = ({ open, onClose, currentTeacherId, classId, onTeacherChan
             setSaving(true);
             setError(null);
 
-            console.log('Attempting to update teacher with:', {
-                classId,
-                teacherID: selectedTeacher.teacherID,
-                url: `${API_URL}/class/${classId}/teacher`
-            });
+            // First get the current class data to preserve all fields
+            const currentClassResponse = await axios.get(`${API_URL}/class/${classId}`);
+            const currentClassData = currentClassResponse.data.data;
 
-            // Ensure we're using the correct class ID from props
+            // Update the teacher while preserving other data
             const response = await axios.patch(`${API_URL}/class/${classId}/teacher`, {
-                teacherID: selectedTeacher.teacherID
+                teacherID: selectedTeacher.teacherID,
+                studentIDs: currentClassData.studentIDs || [],
+                semesterID: currentClassData.semesterID
             });
 
-            console.log('Teacher update response:', response);
+            if (response.data) {
+                // Get fresh class data to ensure proper state update
+                const classResponse = await axios.get(`${API_URL}/class/${classId}`);
+                const updatedClass = classResponse.data.data;
 
-            if (response.data.success) {
-                onTeacherChange(selectedTeacher);
+                // Get fresh teacher data
+                const teacherResponse = await axios.get(`${API_URL}/teacher/by-teacher-id/${selectedTeacher.teacherID}`);
+                const updatedTeacher = teacherResponse.data;
+
+                console.log('Teacher change successful:', {
+                    updatedClass,
+                    updatedTeacher,
+                    preservedData: {
+                        studentIDs: updatedClass.studentIDs,
+                        semesterID: updatedClass.semesterID
+                    }
+                });
+
+                // Update the UI with fresh data
+                onTeacherChange(updatedTeacher, updatedClass);
                 onClose();
-            } else {
-                throw new Error('Failed to update teacher');
             }
         } catch (error) {
-            console.error('Error changing teacher:', {
-                error,
-                status: error.response?.status,
-                data: error.response?.data,
-                url: `${API_URL}/class/${classId}/teacher`,
-                requestData: {
-                    teacherID: selectedTeacher.teacherID
-                }
-            });
+            console.error('Error changing teacher:', error);
             setError(error.response?.data?.message || 'Failed to change teacher. Please try again.');
         } finally {
             setSaving(false);
@@ -130,7 +142,7 @@ const ChangeTeacher = ({ open, onClose, currentTeacherId, classId, onTeacherChan
     return (
         <Dialog
             open={open}
-            onClose={onClose}
+            onClose={!saving ? onClose : undefined}
             maxWidth="sm"
             fullWidth
             PaperProps={{
@@ -155,6 +167,7 @@ const ChangeTeacher = ({ open, onClose, currentTeacherId, classId, onTeacherChan
                     variant="outlined"
                     value={searchQuery}
                     onChange={handleSearchChange}
+                    disabled={saving}
                     sx={{ mb: 2, mt: 1 }}
                     InputProps={{
                         startAdornment: (
@@ -193,36 +206,29 @@ const ChangeTeacher = ({ open, onClose, currentTeacherId, classId, onTeacherChan
                                 button
                                 selected={selectedTeacher?.teacherID === teacher.teacherID}
                                 onClick={() => handleTeacherSelect(teacher)}
+                                disabled={saving}
                                 sx={{
                                     border: '1px solid',
                                     borderColor: selectedTeacher?.teacherID === teacher.teacherID
                                         ? 'primary.main'
                                         : theme.palette.mode === 'dark'
-                                            ? 'rgba(255, 255, 255, 0.1)'
-                                            : 'rgba(0, 0, 0, 0.1)',
+                                            ? 'rgba(255, 255, 255, 0.12)'
+                                            : 'rgba(0, 0, 0, 0.12)',
                                 }}
                             >
                                 <ListItemAvatar>
                                     <Avatar src={teacher.avatar}>
-                                        {teacher.firstName[0]}{teacher.lastName[0]}
+                                        <PersonIcon />
                                     </Avatar>
                                 </ListItemAvatar>
                                 <ListItemText
                                     primary={`${teacher.firstName} ${teacher.lastName}`}
-                                    secondary={
-                                        <Typography variant="body2" color="text.secondary">
-                                            ID: {teacher.teacherID}
-                                            {teacher.specialization && ` • ${teacher.specialization}`}
-                                        </Typography>
-                                    }
+                                    secondary={`Teacher ID: ${teacher.teacherID}`}
                                 />
                                 {selectedTeacher?.teacherID === teacher.teacherID && (
                                     <ListItemSecondaryAction>
-                                        <IconButton
-                                            edge="end"
-                                            sx={{ color: 'primary.main' }}
-                                        >
-                                            <CheckIcon />
+                                        <IconButton edge="end" disabled>
+                                            <CheckIcon color="primary" />
                                         </IconButton>
                                     </ListItemSecondaryAction>
                                 )}
@@ -231,17 +237,22 @@ const ChangeTeacher = ({ open, onClose, currentTeacherId, classId, onTeacherChan
                     </List>
                 )}
             </DialogContent>
-            <DialogActions sx={{ p: 2.5, pt: 1.5 }}>
-                <Button onClick={onClose} color="inherit">
+            <DialogActions sx={{ p: 2.5 }}>
+                <Button
+                    onClick={onClose}
+                    disabled={saving}
+                    variant="outlined"
+                    sx={{ minWidth: 100 }}
+                >
                     Cancel
                 </Button>
                 <Button
                     onClick={handleSave}
-                    variant="contained"
                     disabled={!selectedTeacher || saving}
-                    startIcon={saving && <CircularProgress size={20} color="inherit" />}
+                    variant="contained"
+                    sx={{ minWidth: 100 }}
                 >
-                    {saving ? 'Saving...' : 'Save Changes'}
+                    {saving ? <CircularProgress size={24} /> : 'Save'}
                 </Button>
             </DialogActions>
         </Dialog>

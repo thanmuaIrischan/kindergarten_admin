@@ -233,7 +233,7 @@ const ClassTable = React.forwardRef(({ classes, onEdit, onDelete, onViewDetails 
                                     padding: '12px 16px',
                                 }}
                             >
-                                {classItem.students ? classItem.students.length : 0}
+                                {classItem.studentCount || 0}
                             </TableCell>
                             <TableCell
                                 className="no-print"
@@ -248,7 +248,11 @@ const ClassTable = React.forwardRef(({ classes, onEdit, onDelete, onViewDetails 
                                     <Tooltip title="View Details">
                                         <IconButton
                                             onClick={() => {
-                                                console.log('View class details:', classItem);
+                                                console.log('View class details:', {
+                                                    classItem,
+                                                    id: classItem?.id,
+                                                    fullData: JSON.stringify(classItem)
+                                                });
                                                 onViewDetails(classItem);
                                             }}
                                             size="small"
