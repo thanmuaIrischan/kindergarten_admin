@@ -28,31 +28,31 @@ const StudentManagement = ({ studentCount, onAction, selectedStudents = [] }) =>
     const StudentActionButton = ({ icon, label, onClick, color = 'primary', isCompact = true, disabled = false, tooltip = '' }) => (
         <Tooltip title={tooltip || (isCompact ? label : '')}>
             <span>
-                <Button
-                    variant="outlined"
-                    size={isCompact ? "small" : "medium"}
-                    startIcon={icon}
-                    onClick={onClick}
+            <Button
+                variant="outlined"
+                size={isCompact ? "small" : "medium"}
+                startIcon={icon}
+                onClick={onClick}
                     disabled={disabled}
-                    sx={{
+                sx={{
                         height: isCompact ? '32px' : '48px',
                         minWidth: isCompact ? '32px' : '200px',
                         width: isCompact ? 'auto' : '100%',
-                        color: theme.palette.mode === 'dark'
-                            ? theme.palette[color].light
-                            : theme.palette[color].main,
-                        borderColor: theme.palette.mode === 'dark'
-                            ? theme.palette[color].light
-                            : theme.palette[color].main,
-                        borderWidth: isCompact ? '1px' : '1.5px',
-                        borderRadius: isCompact ? 1.5 : 2,
-                        textTransform: 'none',
+                    color: theme.palette.mode === 'dark'
+                        ? theme.palette[color].light
+                        : theme.palette[color].main,
+                    borderColor: theme.palette.mode === 'dark'
+                        ? theme.palette[color].light
+                        : theme.palette[color].main,
+                    borderWidth: isCompact ? '1px' : '1.5px',
+                    borderRadius: isCompact ? 1.5 : 2,
+                    textTransform: 'none',
                         fontSize: isCompact ? '0.8rem' : '1rem',
-                        fontWeight: 500,
-                        px: isCompact ? 1 : 2,
-                        '&:hover': {
-                            borderColor: theme.palette[color].main,
-                            transform: 'translateY(-1px)',
+                    fontWeight: 500,
+                    px: isCompact ? 1 : 2,
+                    '&:hover': {
+                        borderColor: theme.palette[color].main,
+                        transform: 'translateY(-1px)',
                             boxShadow: theme.palette.mode === 'dark'
                                 ? '0 4px 8px rgba(0, 0, 0, 0.3)'
                                 : '0 4px 8px rgba(0, 0, 0, 0.1)',
@@ -71,10 +71,10 @@ const StudentManagement = ({ studentCount, onAction, selectedStudents = [] }) =>
                                 fontSize: isCompact ? '1.2rem' : '1.5rem',
                             }
                         }
-                    }}
-                >
-                    {isCompact ? label.split(' ')[0] : label}
-                </Button>
+                }}
+            >
+                {isCompact ? label.split(' ')[0] : label}
+            </Button>
             </span>
         </Tooltip>
     );

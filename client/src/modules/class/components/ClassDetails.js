@@ -617,6 +617,7 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
                                     onViewStudent={(student) => handleActionClick('viewStudent', student)}
                                     onEditStudent={onEditStudent}
                                     onDeleteStudent={(student) => handleActionClick('deleteStudent', student)}
+                                    onAction={handleStudentAction}
                                 />
                             )}
                         </Box>
