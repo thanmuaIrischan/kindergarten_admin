@@ -56,7 +56,11 @@ import TeacherCard from './classDetails/TeacherCard';
 import StudentManagement from './classDetails/StudentManagement';
 import ActionButtons from './classDetails/ActionButtons';
 import StudentTable from './classDetails/StudentTable';
+import StudentGrid from './classDetails/StudentGrid';
 import ChangeTeacher from './teacherActions/ChangeTeacher';
+import SemesterCard from './classDetails/SemesterCard';
+import ChangeSemester from './semesterActions/ChangeSemester';
+import { AddStudent, RemoveStudent, TransferStudent } from './studentActions';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
@@ -72,12 +76,22 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
     const [dialogType, setDialogType] = useState('');
     const [showActions, setShowActions] = useState(true);
     const [changeTeacherOpen, setChangeTeacherOpen] = useState(false);
+    const [changeSemesterOpen, setChangeSemesterOpen] = useState(false);
+    const [semester, setSemester] = useState(null);
+    const [semesterLoading, setSemesterLoading] = useState(false);
+    const [viewMode, setViewMode] = useState('list');
+    const [selectedStudent, setSelectedStudent] = useState(null);
+    const [addStudentOpen, setAddStudentOpen] = useState(false);
+    const [removeStudentOpen, setRemoveStudentOpen] = useState(false);
+    const [transferStudentOpen, setTransferStudentOpen] = useState(false);
+    const [selectedStudentsForTransfer, setSelectedStudentsForTransfer] = useState([]);
 
     useEffect(() => {
         console.log('ClassDetails - classData changed:', {
             classData,
             id: classData?.id,
-            teacherID: classData?.teacherID
+            teacherID: classData?.teacherID,
+            fullData: JSON.stringify(classData)
         });
 
         if (!classData?.id) {
@@ -145,28 +159,95 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
 
         setLoading(true);
         try {
-            console.log('Fetching students for class:', classData.id);
+            // Get fresh class data to get the latest student IDs
             const classResponse = await axios.get(`${API_URL}/class/${classData.id}`);
-            const classStudents = classResponse.data.data.students || [];
+            const freshClassData = classResponse.data.data;
+            const studentIDs = freshClassData.students || []; // Using students array that contains studentIDs
 
-            const studentPromises = classStudents.map(studentId =>
-                axios.get(`${API_URL}/student/${studentId}`)
-            );
+            console.log('Fresh class data:', freshClassData);
+            console.log('Student IDs:', studentIDs);
+
+            // Update the class data in state
+            Object.assign(classData, freshClassData);
+
+            if (!studentIDs || studentIDs.length === 0) {
+                console.log('No students found in class');
+                setStudents([]);
+                return;
+            }
+
+            // Fetch each student's details from the student table
+            const studentPromises = studentIDs.map(async (studentId) => {
+                try {
+                    // Get student details from student table using studentId
+                    const response = await axios.get(`${API_URL}/student/${studentId}`);
+                    const studentData = response.data.data;
+                    console.log('Fetched student data:', studentData);
+                    return {
+                        id: studentData.id,
+                        studentID: studentData.studentID,
+                        firstName: studentData.firstName,
+                        lastName: studentData.lastName,
+                        gender: studentData.gender,
+                        dateOfBirth: studentData.dateOfBirth,
+                        phone: studentData.phone,
+                        email: studentData.email,
+                        address: studentData.address,
+                        avatar: studentData.avatar
+                    };
+                } catch (error) {
+                    console.error(`Failed to fetch student ${studentId}:`, error);
+                    return null;
+                }
+            });
 
             const studentResponses = await Promise.all(studentPromises);
-            const studentDetails = studentResponses.map(response => response.data.data);
+            const validStudents = studentResponses.filter(Boolean);
 
-            const sortedStudents = studentDetails.sort((a, b) =>
-                `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`)
-            );
-
-            setStudents(sortedStudents);
+            console.log('Fetched student details:', validStudents);
+            setStudents(validStudents);
         } catch (error) {
-            console.error('Error fetching students:', error);
+            console.error('Error in fetchStudents:', error);
+            setStudents([]);
         } finally {
             setLoading(false);
         }
     };
+
+    const fetchSemesterDetails = async () => {
+        if (!classData?.semesterID) {
+            console.log('No semesterID provided');
+            setSemester(null);
+            return;
+        }
+
+        setSemesterLoading(true);
+        try {
+            console.log('Fetching semester details for ID:', classData.semesterID);
+            const response = await axios.get(`${API_URL}/semester/${classData.semesterID}`);
+
+            if (response.data && response.data.data) {
+                console.log('Fetched semester details:', response.data.data);
+                setSemester(response.data.data);
+            } else {
+                console.error('Invalid semester response:', response.data);
+                setSemester(null);
+            }
+        } catch (error) {
+            console.error('Error fetching semester details:', error);
+            setSemester(null);
+        } finally {
+            setSemesterLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (classData?.semesterID) {
+            fetchSemesterDetails();
+        } else {
+            setSemester(null);
+        }
+    }, [classData?.semesterID]);
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -195,12 +276,42 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
         setChangeTeacherOpen(true);
     };
 
-    const handleStudentAction = (action) => {
-        handleActionClick(action);
+    const handleStudentAction = (action, student = null, selectedStudents = []) => {
+        if (action === 'transferStudent' && selectedStudents.length > 0) {
+            // For multiple student transfer, we don't need to set selectedStudent
+            setSelectedStudent(null);
+            setSelectedStudentsForTransfer(selectedStudents);
+        } else if (action === 'transferStudent' && student) {
+            // For single student transfer
+            setSelectedStudent(student);
+            setSelectedStudentsForTransfer([]);
+        } else {
+            setSelectedStudent(student);
+            setSelectedStudentsForTransfer([]);
+        }
+
+        switch (action) {
+            case 'addStudent':
+                setAddStudentOpen(true);
+                break;
+            case 'removeStudent':
+                setRemoveStudentOpen(true);
+                break;
+            case 'transferStudent':
+                setTransferStudentOpen(true);
+                break;
+            default:
+                console.error('Unknown action:', action);
+        }
     };
 
-    const handleTeacherChange = async (newTeacher) => {
-        if (newTeacher) {
+    const handleTeacherChange = async (newTeacher, updatedClass) => {
+        if (!newTeacher) return;
+
+        try {
+            console.log('Handling teacher change:', { newTeacher, updatedClass });
+
+            // Update teacher details
             setTeacherDetails({
                 firstName: newTeacher.firstName || '',
                 lastName: newTeacher.lastName || '',
@@ -210,10 +321,81 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
                 dateOfBirth: newTeacher.dateOfBirth || '',
                 avatar: newTeacher.avatar || ''
             });
-            // Update the classData with new teacherID
-            if (classData) {
-                classData.teacherID = newTeacher.teacherID;
+
+            // Update class data while preserving existing data
+            if (updatedClass && classData) {
+                Object.assign(classData, {
+                    ...classData,
+                    ...updatedClass,
+                    students: updatedClass.students || classData.students || [], // Preserve students array
+                    semesterID: updatedClass.semesterID || classData.semesterID
+                });
+                console.log('Updated class data:', classData);
             }
+
+            // Fetch fresh student data
+            await fetchStudents();
+
+            // Close the dialog
+            setChangeTeacherOpen(false);
+        } catch (error) {
+            console.error('Error in handleTeacherChange:', error);
+        }
+    };
+
+    const handleViewChange = (mode) => {
+        setViewMode(mode);
+    };
+
+    const handleReloadStudents = () => {
+        fetchStudents();
+    };
+
+    const handleChangeSemester = () => {
+        setChangeSemesterOpen(true);
+    };
+
+    const handleSemesterChange = async (newSemester, updatedClass) => {
+        try {
+            if (!newSemester || !updatedClass) {
+                console.error('Invalid semester change data:', { newSemester, updatedClass });
+                return;
+            }
+
+            setSemester(newSemester);
+            // Update the class data with the new information
+            Object.assign(classData, updatedClass);
+            // Refresh the semester details
+            await fetchSemesterDetails();
+            // Refresh students list as it might be affected by semester change
+            await fetchStudents();
+        } catch (error) {
+            console.error('Error in handleSemesterChange:', error);
+        }
+    };
+
+    const handleStudentAdd = async (student, updatedClass) => {
+        console.log('Student added:', student);
+        await fetchStudents();
+        setAddStudentOpen(false);
+    };
+
+    const handleStudentRemove = async (student, updatedClass) => {
+        console.log('Student removed:', student);
+        await fetchStudents();
+        setRemoveStudentOpen(false);
+        setSelectedStudent(null);
+    };
+
+    const handleStudentTransfer = async (students, targetClass, updatedClass) => {
+        try {
+            console.log('Students transferred:', { students, targetClass });
+            await fetchStudents();
+            setTransferStudentOpen(false);
+            setSelectedStudent(null);
+            setSelectedStudentsForTransfer([]);
+        } catch (error) {
+            console.error('Error in handleStudentTransfer:', error);
         }
     };
 
@@ -515,7 +697,7 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
 
                 {/* Main Content */}
                 <Grid container spacing={3}>
-                    {/* Teacher and Student Management Cards */}
+                    {/* Teacher, Student Management, and Semester Cards */}
                     <Grid item xs={12} md={4}>
                         <Grid container spacing={3}>
                             <Grid item xs={12}>
@@ -529,6 +711,16 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
                                 <StudentManagement
                                     studentCount={students.length}
                                     onAction={handleStudentAction}
+                                    selectedStudentCount={selectedStudentsForTransfer.length}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <SemesterCard
+                                    semester={semester}
+                                    loading={semesterLoading}
+                                    onViewChange={handleViewChange}
+                                    onReload={handleReloadStudents}
+                                    onChangeSemester={handleChangeSemester}
                                 />
                             </Grid>
                         </Grid>
@@ -542,17 +734,28 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
                             onActionClick={handleActionClick}
                         />
                         <Box sx={{ mt: 3 }}>
-                            <StudentTable
-                                students={students}
-                                loading={loading}
-                                page={page}
-                                rowsPerPage={rowsPerPage}
-                                onChangePage={handleChangePage}
-                                onChangeRowsPerPage={handleChangeRowsPerPage}
-                                onViewStudent={(student) => handleActionClick('viewStudent', student)}
-                                onEditStudent={onEditStudent}
-                                onDeleteStudent={(student) => handleActionClick('deleteStudent', student)}
-                            />
+                            {viewMode === 'list' ? (
+                                <StudentTable
+                                    students={students}
+                                    loading={loading}
+                                    page={page}
+                                    rowsPerPage={rowsPerPage}
+                                    onChangePage={handleChangePage}
+                                    onChangeRowsPerPage={handleChangeRowsPerPage}
+                                    onViewStudent={(student) => handleActionClick('viewStudent', student)}
+                                    onEditStudent={onEditStudent}
+                                    onDeleteStudent={(student) => handleActionClick('deleteStudent', student)}
+                                    onAction={handleStudentAction}
+                                />
+                            ) : (
+                                <StudentGrid
+                                    students={students}
+                                    loading={loading}
+                                    onViewStudent={(student) => handleActionClick('viewStudent', student)}
+                                    onEditStudent={onEditStudent}
+                                    onDeleteStudent={(student) => handleActionClick('deleteStudent', student)}
+                                />
+                            )}
                         </Box>
                     </Grid>
                 </Grid>
@@ -563,10 +766,48 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
                 onClose={() => setChangeTeacherOpen(false)}
                 currentTeacherId={teacherDetails?.teacherID}
                 classId={classData?.id}
-                onTeacherChange={(newTeacher) => {
-                    handleTeacherChange(newTeacher);
-                    setChangeTeacherOpen(false);
+                onTeacherChange={handleTeacherChange}
+            />
+
+            <ChangeSemester
+                open={changeSemesterOpen}
+                onClose={() => setChangeSemesterOpen(false)}
+                currentSemesterId={semester?.id}
+                classId={classData?.id}
+                onSemesterChange={handleSemesterChange}
+            />
+
+            {/* Student Action Dialogs */}
+            <AddStudent
+                open={addStudentOpen}
+                onClose={() => setAddStudentOpen(false)}
+                classId={classData?.id}
+                currentStudentIds={students.map(s => s.studentID)}
+                onStudentAdd={handleStudentAdd}
+            />
+
+            <RemoveStudent
+                open={removeStudentOpen}
+                onClose={() => setRemoveStudentOpen(false)}
+                classId={classData?.id}
+                student={selectedStudent}
+                students={students}
+                onStudentRemove={handleStudentRemove}
+                mode={selectedStudent ? 'single' : 'multiple'}
+            />
+
+            <TransferStudent
+                open={transferStudentOpen}
+                onClose={() => {
+                    setTransferStudentOpen(false);
+                    setSelectedStudent(null);
+                    setSelectedStudentsForTransfer([]);
                 }}
+                currentClassId={classData?.id}
+                student={selectedStudent}
+                students={selectedStudentsForTransfer.length > 0 ? selectedStudentsForTransfer : (selectedStudent ? [selectedStudent] : [])}
+                onStudentTransfer={handleStudentTransfer}
+                mode={selectedStudentsForTransfer.length > 0 ? 'multiple' : 'single'}
             />
         </Box>
     );

@@ -197,7 +197,11 @@ const Home = () => {
     };
 
     const handleClassView = (classItem) => {
-        console.log('Viewing class details:', classItem);
+        console.log('Viewing class details:', {
+            classItem,
+            id: classItem?.id,
+            fullData: JSON.stringify(classItem)
+        });
         if (!classItem || !classItem.id) {
             console.error('Invalid class data:', classItem);
             return;

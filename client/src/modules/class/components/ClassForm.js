@@ -15,7 +15,8 @@ const ClassForm = ({ onSubmit, isLoading, initialData, onBack }) => {
     const [formData, setFormData] = React.useState({
         className: initialData?.className || '',
         teacherID: initialData?.teacherID || '',
-        students: initialData?.students || []
+        studentIDs: initialData?.studentIDs || [],
+        semesterID: initialData?.semesterID || ''
     });
 
     useEffect(() => {
@@ -23,7 +24,8 @@ const ClassForm = ({ onSubmit, isLoading, initialData, onBack }) => {
             setFormData({
                 className: initialData.className || '',
                 teacherID: initialData.teacherID || '',
-                students: initialData.students || []
+                studentIDs: initialData.studentIDs || [],
+                semesterID: initialData.semesterID || ''
             });
         }
     }, [initialData]);

@@ -2,6 +2,7 @@ const { db } = require('../../../config/firebase');
 const { toClientFormat, toFirebaseFormat } = require('../model/class.model');
 const ErrorResponse = require('../../../utils/errorResponse');
 const TeacherRepository = require('../../teacher/repositories/teacher.repository');
+const { FieldValue } = require('firebase-admin/firestore');
 
 class ClassRepository {
     constructor() {
@@ -24,8 +25,16 @@ class ClassRepository {
             const results = snapshot.docs.map(doc => {
                 try {
                     const data = toClientFormat(doc);
-                    console.log('Processed document:', { id: doc.id, data: doc.data() });
-                    return data;
+                    const rawData = doc.data();
+                    console.log('Processed document:', {
+                        id: doc.id,
+                        data: rawData,
+                        studentCount: rawData.students ? rawData.students.length : 0
+                    });
+                    return {
+                        ...data,
+                        studentCount: rawData.students ? rawData.students.length : 0
+                    };
                 } catch (err) {
                     console.error('Error processing document:', { id: doc.id, error: err.message });
                     return null;
@@ -50,7 +59,12 @@ class ClassRepository {
             if (!doc.exists) {
                 throw new ErrorResponse('Class not found', 404);
             }
-            return toClientFormat(doc);
+            const formattedData = toClientFormat(doc);
+            const rawData = doc.data();
+            return {
+                ...formattedData,
+                studentCount: rawData.students ? rawData.students.length : 0
+            };
         } catch (error) {
             if (error.status === 404) throw error;
             throw new ErrorResponse('Error fetching class', 500);
@@ -110,15 +124,37 @@ class ClassRepository {
                 }
             }
 
-            // Update only the teacher field and updatedAt timestamp
+            // Get current class data
+            const currentData = classDoc.data();
+
+            // Create update data preserving all necessary fields
             const updateData = {
                 teacherID: teacherID || null,
-                updatedAt: new Date().toISOString()
+                className: currentData.className,
+                students: currentData.students || [], // Preserve students array with studentIDs
+                semesterID: currentData.semesterID || null // Preserve semesterID
             };
 
-            await this.collection.doc(id).update(updateData);
+            // Remove any timestamp fields if they exist
+            await this.collection.doc(id).update({
+                updatedAt: FieldValue.delete(),
+                createdAt: FieldValue.delete(),
+                isTeacherChange: FieldValue.delete()
+            });
+
+            // Then update with the complete data
+            const data = toFirebaseFormat(updateData);
+            await this.collection.doc(id).update(data);
+
             const updatedDoc = await this.collection.doc(id).get();
-            return toClientFormat(updatedDoc);
+            const formattedData = toClientFormat(updatedDoc);
+            const rawData = updatedDoc.data();
+
+            // Add studentCount to the response
+            return {
+                ...formattedData,
+                studentCount: rawData.students ? rawData.students.length : 0
+            };
         } catch (error) {
             if (error instanceof ErrorResponse) throw error;
             throw new ErrorResponse('Error updating class teacher', 500);

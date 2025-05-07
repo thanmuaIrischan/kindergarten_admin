@@ -86,7 +86,7 @@ const StudentManagement = ({ studentCount, onAction }) => {
                 />
                 <StudentActionButton
                     icon={<SwapHorizIcon />}
-                    label="Transfer Student"
+                    label="Transfer Multiple Students"
                     onClick={() => onAction('transferStudent')}
                     color="info"
                     isCompact={true}
@@ -127,7 +127,7 @@ const StudentManagement = ({ studentCount, onAction }) => {
                 />
                 <StudentActionButton
                     icon={<SwapHorizIcon />}
-                    label="Transfer Student"
+                    label="Transfer Multiple Students"
                     onClick={() => onAction('transferStudent')}
                     color="info"
                     isCompact={false}
