@@ -203,12 +203,12 @@ const StudentTable = ({
                                 .map((student) => {
                                     const isSelected = selectedStudents.some(s => s.studentID === student.studentID);
                                     return (
-                                        <TableRow
-                                            hover
-                                            key={student.id}
+                                    <TableRow
+                                        hover
+                                        key={student.id}
                                             selected={isSelected}
-                                            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                                        >
+                                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                    >
                                             <TableCell padding="checkbox">
                                                 <Checkbox
                                                     color="primary"
@@ -216,14 +216,14 @@ const StudentTable = ({
                                                     onChange={() => handleSelectStudent(student)}
                                                 />
                                             </TableCell>
-                                            <TableCell>{student.studentID}</TableCell>
-                                            <TableCell>{` ${student.lastName} ${student.firstName} `}</TableCell>
-                                            <TableCell>{student.gender}</TableCell>
-                                            <TableCell>{student.dateOfBirth}</TableCell>
-                                            <TableCell align="center">
+                                        <TableCell>{student.studentID}</TableCell>
+                                        <TableCell>{` ${student.lastName} ${student.firstName} `}</TableCell>
+                                        <TableCell>{student.gender}</TableCell>
+                                        <TableCell>{student.dateOfBirth}</TableCell>
+                                        <TableCell align="center">
                                                 <ActionButtons student={student} />
-                                            </TableCell>
-                                        </TableRow>
+                                        </TableCell>
+                                    </TableRow>
                                     );
                                 })
                         )}
@@ -241,15 +241,15 @@ const StudentTable = ({
                         Transfer Selected ({selectedStudents.length})
                     </Button>
                 )}
-                <TablePagination
-                    rowsPerPageOptions={[5, 10, 25]}
-                    component="div"
-                    count={students.length}
-                    rowsPerPage={rowsPerPage}
-                    page={page}
-                    onPageChange={onChangePage}
-                    onRowsPerPageChange={onChangeRowsPerPage}
-                />
+            <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={students.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={onChangePage}
+                onRowsPerPageChange={onChangeRowsPerPage}
+            />
             </Box>
         </Paper>
     );
