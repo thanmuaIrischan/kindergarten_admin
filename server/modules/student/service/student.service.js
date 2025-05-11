@@ -5,6 +5,9 @@ const cloudinary = require('cloudinary').v2;
 const { validateStudent } = require('../validation/student.validation');
 const { StudentRepository } = require('../repository/student.repository');
 const ErrorResponse = require('../../../utils/errorResponse');
+const XLSX = require('xlsx');
+const { studentModel, toFirebaseFormat } = require('../model/student.model');
+const ExcelJS = require('exceljs');
 
 // Configure Cloudinary
 cloudinary.config({
@@ -249,59 +252,158 @@ class StudentService {
         return await this.studentRepository.delete(id);
     }
 
-    async importStudents(data) {
+    async importStudents(file) {
         try {
-            const batch = db.batch();
-            const studentsRef = db.collection('student');
-
-            for (const student of data) {
-                const firebaseData = this._convertToFirebaseFormat(student);
-                const docRef = studentsRef.doc();
-                batch.set(docRef, firebaseData);
+            console.log('Starting import process...');
+            
+            if (!file) {
+                throw new Error('No file provided');
             }
 
+            const workbook = new ExcelJS.Workbook();
+            await workbook.xlsx.load(file.buffer);
+            
+            const worksheet = workbook.getWorksheet(1);
+            if (!worksheet) {
+                throw new Error('No worksheet found in the Excel file');
+            }
+
+            const students = [];
+            let rowCount = 0;
+
+            worksheet.eachRow((row, rowNumber) => {
+                if (rowNumber === 1) return; // Skip header row
+
+                const student = {
+                    studentProfile: {
+                        studentID: row.getCell('studentID').value?.toString() || '',
+                        firstName: row.getCell('firstName').value?.toString() || '',
+                        lastName: row.getCell('lastName').value?.toString() || '',
+                        name: row.getCell('name').value?.toString() || '',
+                        dateOfBirth: row.getCell('dateOfBirth').value?.toString() || '',
+                        gender: row.getCell('gender').value?.toString() || '',
+                        gradeLevel: row.getCell('gradeLevel').value?.toString() || '',
+                        school: row.getCell('school').value?.toString() || '',
+                        class: row.getCell('class').value?.toString() || '',
+                        educationSystem: row.getCell('educationSystem').value?.toString() || '',
+                        fatherFullname: row.getCell('fatherName').value?.toString() || '',
+                        fatherOccupation: row.getCell('fatherOccupation').value?.toString() || '',
+                        motherFullname: row.getCell('motherName').value?.toString() || '',
+                        motherOccupation: row.getCell('motherOccupation').value?.toString() || ''
+                    },
+                    studentDocument: {
+                        image: row.getCell('image').value?.toString() || '',
+                        birthCertificate: row.getCell('birthCertificate').value?.toString() || '',
+                        householdRegistration: row.getCell('householdRegistration').value?.toString() || ''
+                    }
+                };
+
+                students.push(student);
+                rowCount++;
+            });
+
+            console.log(`Processed ${rowCount} rows from Excel file`);
+
+            if (students.length === 0) {
+                throw new Error('No valid student data found in the file');
+            }
+
+            // Batch write to Firebase
+            const batch = db.batch();
+            students.forEach(student => {
+                const docRef = db.collection('student').doc();
+                batch.set(docRef, student);
+            });
+
             await batch.commit();
-            return true;
+            console.log(`Successfully imported ${students.length} students`);
+
+            return {
+                success: true,
+                count: students.length
+            };
         } catch (error) {
-            throw error;
+            console.error('Error in importStudents:', error);
+            throw new Error('Failed to import students: ' + error.message);
         }
     }
 
-    async exportStudentsToJson() {
+    async exportStudents(format, students) {
         try {
-            const students = await this.getAllStudents();
-            return students;
+            console.log('Starting export process...');
+            
+            if (!Array.isArray(students)) {
+                throw new Error('No students data provided');
+            }
+
+            console.log(`Processing ${students.length} students for export`);
+
+            if (format === 'xlsx') {
+                const workbook = new ExcelJS.Workbook();
+                const worksheet = workbook.addWorksheet('Students');
+
+                // Set up columns with proper headers
+                worksheet.columns = [
+                    { header: 'Student ID', key: 'studentID', width: 15 },
+                    { header: 'First Name', key: 'firstName', width: 20 },
+                    { header: 'Last Name', key: 'lastName', width: 20 },
+                    { header: 'Full Name', key: 'name', width: 30 },
+                    { header: 'Date of Birth', key: 'dateOfBirth', width: 15 },
+                    { header: 'Gender', key: 'gender', width: 10 },
+                    { header: 'Grade Level', key: 'gradeLevel', width: 15 },
+                    { header: 'School', key: 'school', width: 30 },
+                    { header: 'Class', key: 'class', width: 15 },
+                    { header: 'Education System', key: 'educationSystem', width: 20 },
+                    { header: 'Father\'s Name', key: 'fatherName', width: 30 },
+                    { header: 'Father\'s Occupation', key: 'fatherOccupation', width: 30 },
+                    { header: 'Mother\'s Name', key: 'motherName', width: 30 },
+                    { header: 'Mother\'s Occupation', key: 'motherOccupation', width: 30 },
+                    { header: 'Image', key: 'image', width: 30 },
+                    { header: 'Birth Certificate', key: 'birthCertificate', width: 30 },
+                    { header: 'Household Registration', key: 'householdRegistration', width: 30 }
+                ];
+
+                // Add rows
+                students.forEach(student => {
+                    worksheet.addRow({
+                        studentID: student.studentID || '',
+                        firstName: student.firstName || '',
+                        lastName: student.lastName || '',
+                        name: student.name || '',
+                        dateOfBirth: student.dateOfBirth || '',
+                        gender: student.gender || '',
+                        gradeLevel: student.gradeLevel || '',
+                        school: student.school || '',
+                        class: student.class || '',
+                        educationSystem: student.educationSystem || '',
+                        fatherName: student.fatherName || '',
+                        fatherOccupation: student.fatherOccupation || '',
+                        motherName: student.motherName || '',
+                        motherOccupation: student.motherOccupation || '',
+                        image: student.image || '',
+                        birthCertificate: student.birthCertificate || '',
+                        householdRegistration: student.householdRegistration || ''
+                    });
+                });
+
+                // Style the header row
+                worksheet.getRow(1).font = { bold: true };
+                worksheet.getRow(1).fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFE0E0E0' }
+                };
+
+                // Generate buffer
+                const buffer = await workbook.xlsx.writeBuffer();
+                return buffer;
+            } else if (format === 'json') {
+                return JSON.stringify(students, null, 2);
+            } else {
+                throw new Error('Invalid export format');
+            }
         } catch (error) {
-            throw error;
-        }
-    }
-
-    async exportStudentsToExcel() {
-        try {
-            const students = await this.getAllStudents();
-            const exportData = students.map(student => ({
-                'Student ID': student.studentID,
-                'First Name': student.firstName,
-                'Last Name': student.lastName,
-                'Class': student.class,
-                'School': student.school,
-                'Education System': student.educationSystem,
-                'Grade Level': student.gradeLevel,
-                'Gender': student.gender,
-                'Date of Birth': student.dateOfBirth,
-                'Father Name': student.parentName,
-                'Father Occupation': student.fatherOccupation,
-                'Mother Name': student.motherName,
-                'Mother Occupation': student.motherOccupation,
-                'Contact': student.parentContact
-            }));
-
-            const worksheet = xlsx.utils.json_to_sheet(exportData);
-            const workbook = xlsx.utils.book_new();
-            xlsx.utils.book_append_sheet(workbook, worksheet, 'Students');
-
-            return xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-        } catch (error) {
+            console.error('Error in exportStudents service:', error);
             throw error;
         }
     }

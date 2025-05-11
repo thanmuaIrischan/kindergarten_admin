@@ -4,6 +4,7 @@ const ErrorResponse = require('../../../utils/errorResponse');
 const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 const { Readable } = require('stream');
+const upload = multer({ storage: multer.memoryStorage() });
 
 class StudentController {
     constructor() {
@@ -195,6 +196,69 @@ class StudentController {
             data: { url }
         });
     });
+
+    importStudents = asyncHandler(async (req, res) => {
+        if (!req.file) {
+            throw new ErrorResponse('Please upload a file', 400);
+        }
+
+        try {
+            const result = await this.studentService.importStudents(req.file);
+            res.json({
+                success: true,
+                count: result.count,
+                message: `Successfully imported ${result.count} students`
+            });
+        } catch (error) {
+            console.error('Error in importStudents:', error);
+            throw new ErrorResponse(error.message || 'Failed to import students', 500);
+        }
+    });
+
+    exportStudents = asyncHandler(async (req, res) => {
+        try {
+            console.log('Export request received:', {
+                format: req.params.format,
+                method: req.method,
+                body: req.body
+            });
+
+            const format = req.params.format;
+            if (!['xlsx', 'json'].includes(format)) {
+                throw new ErrorResponse('Invalid export format. Use xlsx or json.', 400);
+            }
+
+            // Get students from request body for POST, or fetch all students for GET
+            let students;
+            if (req.method === 'POST') {
+                students = req.body.students;
+                if (!Array.isArray(students)) {
+                    throw new ErrorResponse('Students data must be an array', 400);
+                }
+            } else {
+                // For GET requests, fetch all students
+                students = await this.studentService.getAllStudents();
+            }
+
+            console.log(`Processing ${students.length} students for export`);
+
+            const data = await this.studentService.exportStudents(format, students);
+
+            if (format === 'xlsx') {
+                res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                res.setHeader('Content-Disposition', 'attachment; filename=students.xlsx');
+                res.send(data);
+            } else {
+                res.setHeader('Content-Type', 'application/json');
+                res.setHeader('Content-Disposition', 'attachment; filename=students.json');
+                res.send(data);
+            }
+        } catch (error) {
+            console.error('Error in exportStudents controller:', error);
+            throw new ErrorResponse(error.message || 'Failed to export students', 500);
+        }
+    });
 }
 
-module.exports = new StudentController(); 
+const studentController = new StudentController();
+module.exports = studentController; 

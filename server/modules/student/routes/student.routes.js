@@ -11,14 +11,25 @@ const upload = multer({
         fileSize: 10 * 1024 * 1024, // 10MB limit
     },
     fileFilter: (req, file, cb) => {
-        // Accept images and PDFs only
-        if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
+        // Accept Excel files
+        if (file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+            file.mimetype === 'application/vnd.ms-excel') {
             cb(null, true);
         } else {
-            cb(new Error('Only images and PDF files are allowed!'), false);
+            cb(new Error('Only Excel files are allowed!'), false);
         }
     }
 });
+
+// Export routes - must be before other routes
+router.get('/export/:format', studentController.exportStudents);
+router.post('/export/:format', studentController.exportStudents);
+
+// Import route
+router.post('/import', upload.single('file'), studentController.importStudents);
+
+// File upload route
+router.post('/upload', upload.single('file'), studentController.uploadFile);
 
 // Test Firebase connection and data
 router.get('/test-connection', async (req, res) => {
@@ -92,9 +103,6 @@ router.post('/test', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-
-// File upload route - place this before other routes to avoid conflicts
-router.post('/upload', upload.single('file'), studentController.uploadFile);
 
 // Get all students
 router.get('/', studentController.getAllStudents);
