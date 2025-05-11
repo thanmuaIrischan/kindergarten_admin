@@ -213,7 +213,6 @@ const StudentList = ({ onEdit, onAdd, onViewDetails }) => {
             if (!response.data || response.data.size === 0) {
                 throw new Error('No data received from server');
             }
-
             // Create a download link
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
