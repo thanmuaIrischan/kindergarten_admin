@@ -114,11 +114,14 @@ class StudentService {
         try {
             const studentDoc = await db.collection('student').doc(id).get();
             if (!studentDoc.exists) {
-                throw new Error('Student not found');
+                throw new ErrorResponse('Student not found', 404);
             }
             return this._convertToClientFormat(studentDoc);
         } catch (error) {
-            throw error;
+            if (error instanceof ErrorResponse) {
+                throw error;
+            }
+            throw new ErrorResponse('Error retrieving student', 500);
         }
     }
 
@@ -257,7 +260,7 @@ class StudentService {
             console.log('Starting import process...');
             
             if (!file) {
-                throw new Error('No file provided');
+                throw new ErrorResponse('No file provided', 400);
             }
 
             const workbook = new ExcelJS.Workbook();
@@ -265,8 +268,15 @@ class StudentService {
             
             const worksheet = workbook.getWorksheet(1);
             if (!worksheet) {
-                throw new Error('No worksheet found in the Excel file');
+                throw new ErrorResponse('No worksheet found in the Excel file', 400);
             }
+
+            // Get header row to map column names
+            const headerRow = worksheet.getRow(1);
+            const columnMap = {};
+            headerRow.eachCell((cell, colNumber) => {
+                columnMap[cell.value?.toString().toLowerCase()] = colNumber;
+            });
 
             const students = [];
             let rowCount = 0;
@@ -274,38 +284,43 @@ class StudentService {
             worksheet.eachRow((row, rowNumber) => {
                 if (rowNumber === 1) return; // Skip header row
 
-                const student = {
-                    studentProfile: {
-                        studentID: row.getCell('studentID').value?.toString() || '',
-                        firstName: row.getCell('firstName').value?.toString() || '',
-                        lastName: row.getCell('lastName').value?.toString() || '',
-                        name: row.getCell('name').value?.toString() || '',
-                        dateOfBirth: row.getCell('dateOfBirth').value?.toString() || '',
-                        gender: row.getCell('gender').value?.toString() || '',
-                        gradeLevel: row.getCell('gradeLevel').value?.toString() || '',
-                        school: row.getCell('school').value?.toString() || '',
-                        class: row.getCell('class').value?.toString() || '',
-                        educationSystem: row.getCell('educationSystem').value?.toString() || '',
-                        fatherFullname: row.getCell('fatherName').value?.toString() || '',
-                        fatherOccupation: row.getCell('fatherOccupation').value?.toString() || '',
-                        motherFullname: row.getCell('motherName').value?.toString() || '',
-                        motherOccupation: row.getCell('motherOccupation').value?.toString() || ''
-                    },
-                    studentDocument: {
-                        image: row.getCell('image').value?.toString() || '',
-                        birthCertificate: row.getCell('birthCertificate').value?.toString() || '',
-                        householdRegistration: row.getCell('householdRegistration').value?.toString() || ''
-                    }
-                };
+                try {
+                    const student = {
+                        studentProfile: {
+                            studentID: row.getCell(columnMap['studentid'] || 1).value?.toString() || '',
+                            firstName: row.getCell(columnMap['firstname'] || 2).value?.toString() || '',
+                            lastName: row.getCell(columnMap['lastname'] || 3).value?.toString() || '',
+                            name: row.getCell(columnMap['name'] || 4).value?.toString() || '',
+                            dateOfBirth: row.getCell(columnMap['dateofbirth'] || 5).value?.toString() || '',
+                            gender: row.getCell(columnMap['gender'] || 6).value?.toString() || '',
+                            gradeLevel: row.getCell(columnMap['gradelevel'] || 7).value?.toString() || '',
+                            school: row.getCell(columnMap['school'] || 8).value?.toString() || '',
+                            class: row.getCell(columnMap['class'] || 9).value?.toString() || '',
+                            educationSystem: row.getCell(columnMap['educationsystem'] || 10).value?.toString() || '',
+                            fatherFullname: row.getCell(columnMap['fathername'] || 11).value?.toString() || '',
+                            fatherOccupation: row.getCell(columnMap['fatheroccupation'] || 12).value?.toString() || '',
+                            motherFullname: row.getCell(columnMap['mothername'] || 13).value?.toString() || '',
+                            motherOccupation: row.getCell(columnMap['motheroccupation'] || 14).value?.toString() || ''
+                        },
+                        studentDocument: {
+                            image: row.getCell(columnMap['image'] || 15).value?.toString() || '',
+                            birthCertificate: row.getCell(columnMap['birthcertificate'] || 16).value?.toString() || '',
+                            householdRegistration: row.getCell(columnMap['householdregistration'] || 17).value?.toString() || ''
+                        }
+                    };
 
-                students.push(student);
-                rowCount++;
+                    students.push(student);
+                    rowCount++;
+                } catch (rowError) {
+                    console.error(`Error processing row ${rowNumber}:`, rowError);
+                    // Continue with next row instead of failing the entire import
+                }
             });
 
             console.log(`Processed ${rowCount} rows from Excel file`);
 
             if (students.length === 0) {
-                throw new Error('No valid student data found in the file');
+                throw new ErrorResponse('No valid student data found in the file', 400);
             }
 
             // Batch write to Firebase
@@ -324,7 +339,10 @@ class StudentService {
             };
         } catch (error) {
             console.error('Error in importStudents:', error);
-            throw new Error('Failed to import students: ' + error.message);
+            if (error instanceof ErrorResponse) {
+                throw error;
+            }
+            throw new ErrorResponse('Failed to import students: ' + error.message, 500);
         }
     }
 
