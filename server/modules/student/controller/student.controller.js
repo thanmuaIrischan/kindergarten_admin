@@ -5,6 +5,14 @@ const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 const { Readable } = require('stream');
 const upload = multer({ storage: multer.memoryStorage() });
+const { db } = require('../../../config/firebase');
+
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 class StudentController {
     constructor() {
@@ -35,8 +43,12 @@ class StudentController {
                         ]
                     },
                     (error, result) => {
-                        if (error) reject(error);
-                        else resolve(result);
+                        if (error) {
+                            console.error('Cloudinary upload error:', error);
+                            reject(new ErrorResponse('Failed to upload file to Cloudinary', 500));
+                        } else {
+                            resolve(result);
+                        }
                     }
                 );
 
@@ -53,20 +65,136 @@ class StudentController {
             });
         } catch (error) {
             console.error('Upload error:', error);
+            if (error instanceof ErrorResponse) {
+                throw error;
+            }
             throw new ErrorResponse(error.message || 'Error uploading file', 500);
         }
     });
 
-    // @desc    Add new student
+    // @desc    Upload student document (photo, birth certificate, household registration)
+    // @route   POST /api/student/document/upload
+    // @access  Private
+    uploadStudentDocument = asyncHandler(async (req, res) => {
+        console.log('Starting document upload...');
+        console.log('Request body:', req.body);
+        console.log('Request file:', req.file ? {
+            fieldname: req.file.fieldname,
+            mimetype: req.file.mimetype,
+            size: req.file.size
+        } : 'No file');
+
+        try {
+            // Validate file
+            if (!req.file) {
+                throw new ErrorResponse('No file uploaded', 400);
+            }
+
+            // Validate document type
+            const { documentType } = req.body;
+            if (!documentType || !['image', 'birthCertificate', 'householdRegistration'].includes(documentType)) {
+                throw new ErrorResponse('Invalid document type', 400);
+            }
+
+            // Log upload attempt
+            console.log(`Attempting to upload ${documentType}...`);
+
+            // Create upload stream
+            const uploadStream = cloudinary.uploader.upload_stream(
+                {
+                    folder: `kindergarten/student/${documentType === 'image' ? 'photos' : 'documents'}`,
+                    resource_type: 'auto',
+                    transformation: documentType === 'image' ? [
+                        { width: 500, height: 500, crop: "fill", gravity: "face" },
+                        { quality: "auto" },
+                        { fetch_format: "auto" }
+                    ] : [
+                        { quality: "auto" },
+                        { fetch_format: "auto" }
+                    ]
+                },
+                (error, result) => {
+                    if (error) {
+                        console.error('Cloudinary upload error:', error);
+                        return res.status(500).json({
+                            success: false,
+                            error: 'Failed to upload file to Cloudinary',
+                            details: error.message
+                        });
+                    }
+
+                    // Return success response
+                    res.status(200).json({
+                        success: true,
+                        data: {
+                            url: result.secure_url,
+                            public_id: result.public_id,
+                            documentType
+                        },
+                        message: 'Document uploaded successfully'
+                    });
+                }
+            );
+
+            // Pipe the file buffer to the upload stream
+            const stream = Readable.from(req.file.buffer);
+            stream.pipe(uploadStream);
+
+        } catch (error) {
+            console.error('Document upload error:', error);
+            res.status(error.statusCode || 500).json({
+                success: false,
+                error: error.message || 'Error uploading document'
+            });
+        }
+    });
+
+    // @desc    Create new student with documents
     // @route   POST /api/students
     // @access  Private
-    createStudent = asyncHandler(async (req, res, next) => {
-        const student = await this.studentService.createStudent(req.body);
+    createStudent = asyncHandler(async (req, res) => {
+        try {
+            const studentData = req.body;
+            
+            // Format the data to match Firebase structure
+            const formattedData = {
+                studentProfile: {
+                    studentID: studentData.studentID,
+                    name: studentData.name,
+                    firstName: studentData.firstName,
+                    lastName: studentData.lastName,
+                    dateOfBirth: studentData.dateOfBirth,
+                    gender: studentData.gender,
+                    gradeLevel: parseInt(studentData.gradeLevel),
+                    class: studentData.class,
+                    school: studentData.school,
+                    educationSystem: studentData.educationSystem,
+                    fatherFullname: studentData.fatherName,
+                    fatherOccupation: studentData.fatherOccupation,
+                    motherFullname: studentData.motherName,
+                    motherOccupation: studentData.motherOccupation
+                },
+                studentDocument: {
+                    image: studentData.image?.public_id || null,
+                    birthCertificate: studentData.birthCertificate?.public_id || null,
+                    householdRegistration: studentData.householdRegistration?.public_id || null
+                }
+            };
 
-        res.status(201).json({
-            success: true,
-            data: student
-        });
+            // Create student in Firebase
+            const studentRef = await this.studentService.createStudent(formattedData);
+            
+            res.status(201).json({
+                success: true,
+                data: studentRef
+            });
+        } catch (error) {
+            console.error('Create student error:', error);
+            res.status(error.statusCode || 500).json({
+                success: false,
+                error: error.message || 'Error creating student'
+            });
+        }
     });
 
     // @desc    Get all students
@@ -256,6 +384,37 @@ class StudentController {
         } catch (error) {
             console.error('Error in exportStudents controller:', error);
             throw new ErrorResponse(error.message || 'Failed to export students', 500);
+        }
+    });
+
+    // @desc    Check if student ID exists
+    // @route   GET /api/student/check-id/:id
+    // @access  Private
+    checkStudentId = asyncHandler(async (req, res) => {
+        try {
+            const { id } = req.params;
+            console.log('Checking student ID:', id);
+            
+            // Query Firebase for student with this ID
+            const studentsRef = db.collection('student');
+            const snapshot = await studentsRef.where('studentProfile.studentID', '==', id).get();
+            
+            // Check if any documents exist with this studentID
+            const exists = !snapshot.empty;
+            
+            console.log(`Checking student ID: ${id}, Exists: ${exists}`);
+            
+            res.json({
+                success: true,
+                exists: exists,
+                message: exists ? 'Student ID already exists' : 'Student ID is available'
+            });
+        } catch (error) {
+            console.error('Error checking student ID:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Error checking student ID'
+            });
         }
     });
 }

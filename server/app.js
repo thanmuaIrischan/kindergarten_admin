@@ -45,9 +45,18 @@ app.use((req, res, next) => {
 // Error handler
 app.use((err, req, res, next) => {
     console.error('Error:', err);
-    res.status(err.status || 500).json({
+    
+    // Ensure we have a valid status code
+    const statusCode = err.statusCode || 500;
+    
+    // Ensure we have a valid status string
+    const status = err.status || (statusCode >= 400 && statusCode < 500 ? 'fail' : 'error');
+    
+    res.status(statusCode).json({
         success: false,
-        message: err.message || 'Internal server error'
+        status,
+        message: err.message || 'Internal server error',
+        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
     });
 });
 
