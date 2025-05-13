@@ -3,9 +3,10 @@ const router = express.Router();
 const multer = require('multer');
 const studentController = require('../controller/student.controller');
 const { db } = require('../../../config/firebase');
+const { Readable } = require('stream');
 
-// Configure multer for memory storage
-const upload = multer({
+// Configure multer for Excel file uploads (for import)
+const excelUpload = multer({
     storage: multer.memoryStorage(),
     limits: {
         fileSize: 10 * 1024 * 1024, // 10MB limit
@@ -21,15 +22,60 @@ const upload = multer({
     }
 });
 
+// Configure multer for document uploads
+const documentUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+    fileFilter: (req, file, cb) => {
+        // Accept images and PDFs
+        if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
+            cb(null, true);
+        } else {
+            cb(new Error('Only images and PDFs are allowed!'), false);
+        }
+    }
+});
+
 // Export routes - must be before other routes
 router.get('/export/:format', studentController.exportStudents);
 router.post('/export/:format', studentController.exportStudents);
 
 // Import route
-router.post('/import', upload.single('file'), studentController.importStudents);
+router.post('/import', excelUpload.single('file'), studentController.importStudents);
 
-// File upload route
-router.post('/upload', upload.single('file'), studentController.uploadFile);
+// File upload routes - must be before /:id routes
+router.post('/upload', documentUpload.single('file'), studentController.uploadFile);
+router.post('/document/upload', documentUpload.single('file'), studentController.uploadStudentDocument);
+
+// Image optimization routes
+router.get('/image/:public_id', studentController.getImageDetails);
+router.get('/image/optimize', studentController.getOptimizedImageUrl);
+
+// Check student ID route - must be before /:id routes
+router.get('/check-id/:id', studentController.checkStudentId);
+
+// Search students
+router.get('/search', studentController.searchStudents);
+
+// Get students by class
+router.get('/class/:className', studentController.getStudentsByClass);
+
+// Get all students
+router.get('/', studentController.getAllStudents);
+
+// Get student by ID
+router.get('/:id', studentController.getStudentById);
+
+// Create new student
+router.post('/', studentController.createStudent);
+
+// Update student
+router.put('/:id', studentController.updateStudent);
+
+// Delete student
+router.delete('/:id', studentController.deleteStudent);
 
 // Test Firebase connection and data
 router.get('/test-connection', async (req, res) => {
@@ -103,30 +149,5 @@ router.post('/test', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-
-// Get all students
-router.get('/', studentController.getAllStudents);
-
-// Search students
-router.get('/search', studentController.searchStudents);
-
-// Get students by class
-router.get('/class/:className', studentController.getStudentsByClass);
-
-// Get student by ID
-router.get('/:id', studentController.getStudentById);
-
-// Create new student
-router.post('/', studentController.createStudent);
-
-// Update student
-router.put('/:id', studentController.updateStudent);
-
-// Delete student
-router.delete('/:id', studentController.deleteStudent);
-
-// Image optimization routes
-router.get('/image/:public_id', studentController.getImageDetails);
-router.get('/image/optimize', studentController.getOptimizedImageUrl);
 
 module.exports = router; 

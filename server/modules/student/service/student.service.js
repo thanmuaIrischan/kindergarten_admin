@@ -126,57 +126,24 @@ class StudentService {
     }
 
     async createStudent(studentData) {
-        // Validate student data
-        const { error } = validateStudent(studentData);
-        if (error) {
-            throw new ErrorResponse(error.details[0].message, 400);
-        }
-
-        // Handle file uploads to Cloudinary
-        const uploadPromises = [];
-        const fileFields = ['studentPhoto', 'transcriptPhoto', 'householdRegistration'];
-
-        for (const field of fileFields) {
-            if (studentData[field]) {
-                // Check if the field contains a data URL
-                if (studentData[field].startsWith('data:')) {
-                    uploadPromises.push(
-                        cloudinary.uploader.upload(studentData[field], {
-                            folder: `kindergarten/students/${field}s`,
-                            resource_type: 'auto',
-                            transformation: field === 'studentPhoto' ? [
-                                { width: 500, height: 500, crop: "fill", gravity: "face" },
-                                { quality: "auto" },
-                                { fetch_format: "auto" }
-                            ] : [
-                                { quality: "auto" },
-                                { fetch_format: "auto" }
-                            ]
-                        }).then(result => ({
-                            field,
-                            secure_url: result.secure_url,
-                            public_id: result.public_id
-                        }))
-                    );
-                }
+        try {
+            // Validate required fields
+            if (!studentData.studentProfile || !studentData.studentProfile.studentID) {
+                throw new ErrorResponse('Missing required student information', 400);
             }
+
+            // Check if student ID already exists
+            const existingStudent = await this.studentRepository.findById(studentData.studentProfile.studentID);
+            if (existingStudent) {
+                throw new ErrorResponse('Student ID already exists', 400);
+            }
+
+            // Create student in Firebase
+            const studentRef = await this.studentRepository.create(studentData);
+            return studentRef;
+        } catch (error) {
+            throw error;
         }
-
-        // Wait for all uploads to complete
-        if (uploadPromises.length > 0) {
-            const uploadResults = await Promise.all(uploadPromises);
-
-            // Update student data with Cloudinary URLs and public IDs
-            uploadResults.forEach(({ field, secure_url, public_id }) => {
-                studentData[field] = {
-                    url: secure_url,
-                    public_id: public_id
-                };
-            });
-        }
-
-        // Create student in database
-        return await this.studentRepository.create(studentData);
     }
 
     async updateStudent(id, studentData) {

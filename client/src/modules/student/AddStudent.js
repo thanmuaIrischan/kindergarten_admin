@@ -16,6 +16,8 @@ import {
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
 import StudentForm from './components/StudentForm';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+
 const steps = ['Basic Information', 'Documents', 'Review'];
 
 const AddStudent = ({ onBack }) => {
@@ -29,7 +31,7 @@ const AddStudent = ({ onBack }) => {
         setIsLoading(true);
         setError('');
         try {
-            const response = await fetch('/api/students', {
+            const response = await fetch(`${API_URL}/student`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -38,13 +40,19 @@ const AddStudent = ({ onBack }) => {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to create student');
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to create student');
             }
 
-            onBack();
+            const data = await response.json();
+            if (data.success) {
+                onBack();
+            } else {
+                throw new Error(data.error || 'Failed to create student');
+            }
         } catch (error) {
             console.error('Error creating student:', error);
-            setError('Failed to create student. Please try again.');
+            setError(error.message || 'Failed to create student. Please try again.');
         } finally {
             setIsLoading(false);
         }
