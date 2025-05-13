@@ -1,11 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, CircularProgress, Button } from '@mui/material';
+import {
+    Box,
+    Typography,
+    Paper,
+    CircularProgress,
+    Button,
+    Container,
+    useTheme,
+    Stepper,
+    Step,
+    StepLabel,
+    Alert,
+    Fade
+} from '@mui/material';
+import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import StudentForm from './components/StudentForm';
+import axios from 'axios';
 
-const EditStudent = ({ id, onBack }) => {
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+
+const steps = ['Basic Information', 'Education & Parent Info', 'Documents', 'Review'];
+
+const EditStudent = ({ id, onBack, onSubmit }) => {
+    const theme = useTheme();
     const [student, setStudent] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [activeStep, setActiveStep] = useState(0);
+    const [error, setError] = useState('');
+    const [studentData, setStudentData] = useState(null);
 
     useEffect(() => {
         fetchStudent();
@@ -13,40 +36,46 @@ const EditStudent = ({ id, onBack }) => {
 
     const fetchStudent = async () => {
         try {
-            const response = await fetch(`/api/students/${id}`);
-            if (!response.ok) {
+            const response = await axios.get(`${API_URL}/student/${id}`);
+            if (response.data && response.data.success) {
+                setStudent(response.data.data);
+                setStudentData(response.data.data);
+            } else {
                 throw new Error('Failed to fetch student');
             }
-            const data = await response.json();
-            setStudent(data);
         } catch (error) {
             console.error('Error fetching student:', error);
-            alert('Failed to fetch student details. Redirecting to list.');
-            onBack();
+            setError('Failed to fetch student details. Redirecting to list.');
+            setTimeout(() => {
+                onBack();
+            }, 2000);
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleSubmit = async (studentData) => {
-        setIsSaving(true);
-        try {
-            const response = await fetch(`/api/students/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(studentData),
-            });
+    const handleNext = (data) => {
+        setStudentData(data);
+        setActiveStep((prev) => prev + 1);
+    };
 
-            if (!response.ok) {
+    const handleBack = () => {
+        setActiveStep((prev) => prev - 1);
+    };
+
+    const handleSubmit = async (formData) => {
+        setIsSaving(true);
+        setError('');
+        try {
+            const response = await axios.put(`${API_URL}/student/${id}`, formData);
+            if (response.data && response.data.success) {
+                onBack();
+            } else {
                 throw new Error('Failed to update student');
             }
-
-            onBack();
         } catch (error) {
             console.error('Error updating student:', error);
-            alert('Failed to update student. Please try again.');
+            setError(error.response?.data?.message || 'Failed to update student. Please try again.');
         } finally {
             setIsSaving(false);
         }
@@ -61,23 +90,78 @@ const EditStudent = ({ id, onBack }) => {
     }
 
     return (
-        <Box p={3}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-                <Typography variant="h4" component="h1" gutterBottom>
-                    Edit Student
-                </Typography>
-                <Button variant="outlined" onClick={onBack}>
-                    Back to List
-                </Button>
+        <Container maxWidth="lg">
+            <Box sx={{ width: '100%', maxWidth: '100%', p: 2 }}>
+                <Paper
+                    sx={{
+                        p: 3,
+                        backgroundColor: theme.palette.mode === 'dark' ? '#1a1f2c' : '#ffffff',
+                        borderRadius: 2,
+                        boxShadow: theme.palette.mode === 'dark'
+                            ? '0 4px 6px rgba(0, 0, 0, 0.4)'
+                            : '0 2px 4px rgba(0, 0, 0, 0.1)',
+                    }}
+                >
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+                        <Typography variant="h4" component="h1" gutterBottom>
+                            Edit Student
+                        </Typography>
+                        <Button
+                            variant="outlined"
+                            onClick={onBack}
+                            startIcon={<ArrowBackIcon />}
+                            sx={{
+                                color: theme.palette.mode === 'dark' ? '#3498db' : '#2980b9',
+                                borderColor: theme.palette.mode === 'dark' ? '#3498db' : '#2980b9',
+                                '&:hover': {
+                                    borderColor: theme.palette.mode === 'dark' ? '#2980b9' : '#2471a3',
+                                    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(52, 152, 219, 0.1)' : 'rgba(41, 128, 185, 0.1)',
+                                },
+                            }}
+                        >
+                            Back to List
+                        </Button>
+                    </Box>
+
+                    <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+                        {steps.map((label) => (
+                            <Step key={label}>
+                                <StepLabel>{label}</StepLabel>
+                            </Step>
+                        ))}
+                    </Stepper>
+
+                    {error && (
+                        <Fade in={!!error}>
+                            <Alert
+                                severity="error"
+                                sx={{
+                                    mx: 3,
+                                    mt: 3,
+                                    borderRadius: 1,
+                                    '& .MuiAlert-icon': {
+                                        color: theme.palette.error.main
+                                    }
+                                }}
+                                onClose={() => setError('')}
+                            >
+                                {error}
+                            </Alert>
+                        </Fade>
+                    )}
+
+                    <Box sx={{ p: 3, backgroundColor: 'transparent' }}>
+                        <StudentForm
+                            onSubmit={activeStep === steps.length - 1 ? handleSubmit : handleNext}
+                            isLoading={isSaving}
+                            initialData={studentData}
+                            activeStep={activeStep}
+                            onBack={activeStep === 0 ? null : handleBack}
+                        />
+                    </Box>
+                </Paper>
             </Box>
-            <Paper sx={{ p: 3 }}>
-                <StudentForm
-                    student={student}
-                    onSubmit={handleSubmit}
-                    isLoading={isSaving}
-                />
-            </Paper>
-        </Box>
+        </Container>
     );
 };
 
