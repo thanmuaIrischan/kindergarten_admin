@@ -7,6 +7,7 @@ import CalendarPanel from './CalendarPanel';
 import StudentList from '../../modules/student/StudentList';
 import AddStudent from '../../modules/student/AddStudent';
 import EditStudent from '../../modules/student/EditStudent';
+import EditForm from '../../modules/student/components/EditForm/EditForm';
 import StudentDetails from '../../modules/student/components/StudentDetails';
 import ClassList from '../../modules/class/ClassList';
 import AddClass from '../../modules/class/components/AddClass';
@@ -51,6 +52,7 @@ const Home = () => {
     const [selectedTeacher, setSelectedTeacher] = useState(null);
     const { isDark, toggleTheme } = useTheme();
     const [notification, setNotification] = useState(null);
+    const [students, setStudents] = useState([]);
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -65,6 +67,7 @@ const Home = () => {
                 throw new Error('Invalid user data');
             }
             setUser(parsedUser);
+            setStudents(parsedUser.students || []);
         } catch (error) {
             console.error('Error parsing user data:', error);
             localStorage.removeItem('user');
@@ -109,18 +112,102 @@ const Home = () => {
         navigate('/login');
     };
 
-    const handleStudentEdit = (studentId) => {
-        setSelectedStudentId(studentId);
-        setStudentAction('edit');
+    const handleStudentEdit = async (studentId) => {
+        try {
+            setIsLoading(true);
+            console.log('Fetching student with ID:', studentId);
+            
+            const response = await axios.get(`${API_URL}/student/${studentId}`);
+            console.log('API Response:', response.data);
+
+            // Check if response has the expected structure
+            if (response.data && response.data.success) {
+                setSelectedStudent(response.data.data);
+                setSelectedStudentId(studentId);
+                setStudentAction('edit');
+            } else {
+                console.error('Invalid response structure:', response.data);
+                setNotification({
+                    message: 'Invalid student data received',
+                    type: 'error'
+                });
+                handleBackToList();
+            }
+        } catch (error) {
+            console.error('Error fetching student:', error);
+            console.error('Error details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+                url: `${API_URL}/student/${studentId}`
+            });
+            
+            // Show more specific error message
+            const errorMessage = error.response?.data?.message || 
+                               error.message || 
+                               'Failed to fetch student data';
+            
+            setNotification({
+                message: errorMessage,
+                type: 'error'
+            });
+            
+            // Add a small delay before redirecting
+            setTimeout(() => {
+                handleBackToList();
+            }, 2000);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleStudentAdd = () => {
         setStudentAction('add');
     };
 
-    const handleStudentView = (student) => {
-        setSelectedStudent(student);
-        setStudentAction('view');
+    const handleStudentView = async (studentId) => {
+        try {
+            setIsLoading(true);
+            console.log('Fetching student details with ID:', studentId);
+            
+            const response = await axios.get(`${API_URL}/student/${studentId}`);
+            console.log('API Response:', response.data);
+
+            if (response.data && response.data.success) {
+                setSelectedStudent(response.data.data);
+                setStudentAction('view');
+            } else {
+                console.error('Invalid response structure:', response.data);
+                setNotification({
+                    message: 'Invalid student data received',
+                    type: 'error'
+                });
+                handleBackToList();
+            }
+        } catch (error) {
+            console.error('Error fetching student details:', error);
+            console.error('Error details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status,
+                url: `${API_URL}/student/${studentId}`
+            });
+            
+            const errorMessage = error.response?.data?.message || 
+                               error.message || 
+                               'Failed to fetch student details';
+            
+            setNotification({
+                message: errorMessage,
+                type: 'error'
+            });
+            
+            setTimeout(() => {
+                handleBackToList();
+            }, 2000);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleBackToList = () => {
@@ -210,6 +297,30 @@ const Home = () => {
         setClassAction('view');
     };
 
+    const handleStudentSubmit = async (data) => {
+        try {
+            setIsLoading(true);
+            if (studentAction === 'add') {
+                await axios.post(`${API_URL}/students`, data);
+            } else {
+                await axios.put(`${API_URL}/students/${selectedStudent.id}`, data);
+            }
+            handleBackToList();
+            setNotification({
+                message: `Student ${studentAction === 'add' ? 'added' : 'updated'} successfully!`,
+                type: 'success'
+            });
+        } catch (error) {
+            console.error('Error:', error);
+            setNotification({
+                message: error.response?.data?.message || `Failed to ${studentAction === 'add' ? 'add' : 'update'} student`,
+                type: 'error'
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
     if (isLoading) {
         return <div className="loading-container">Loading...</div>;
     }
@@ -229,14 +340,22 @@ const Home = () => {
             case 'add':
                 return <AddStudent onBack={handleBackToList} />;
             case 'edit':
-                return <EditStudent id={selectedStudentId} onBack={handleBackToList} />;
+                return selectedStudent ? (
+                    <EditStudent
+                        id={selectedStudentId}
+                        onBack={handleBackToList}
+                        onSubmit={handleStudentSubmit}
+                    />
+                ) : null;
             case 'view':
                 return selectedStudent ? (
                     <StudentDetails
                         student={selectedStudent}
                         onBack={handleBackToList}
                     />
-                ) : null;
+                ) : (
+                    <div>Loading student details...</div>
+                );
             default:
                 return null;
         }

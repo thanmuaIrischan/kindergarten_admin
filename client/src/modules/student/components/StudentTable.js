@@ -267,7 +267,7 @@ const StudentTable = ({
                             ))
                     ) : (
                         <TableRow>
-                            <TableCell colSpan={7} align="center">
+                            <TableCell colSpan={6} align="center">
                                 No students found
                             </TableCell>
                         </TableRow>

@@ -61,6 +61,9 @@ const StudentList = ({ onEdit, onAdd, onViewDetails }) => {
         try {
             const response = await axios.get(`${API_URL}/student`);
             const { data: fetchedStudents } = response.data;
+            console.log('Fetched students:', fetchedStudents);
+            console.log('First student object structure:', fetchedStudents[0]);
+            console.log('Student ID property:', fetchedStudents[0]?._id || fetchedStudents[0]?.id);
 
             if (!Array.isArray(fetchedStudents)) {
                 throw new Error('Invalid response format: expected an array');
@@ -238,11 +241,7 @@ const StudentList = ({ onEdit, onAdd, onViewDetails }) => {
     };
 
     const handleViewDetails = (studentId) => {
-        const student = students.find(s => s.id === studentId);
-        console.log('Selected Student:', student);
-        if (student) {
-            onViewDetails(student);
-        }
+        onViewDetails(studentId);
     };
 
     const handleSortClick = (event) => {
