@@ -11,10 +11,11 @@ import {
     Step,
     StepLabel,
     Alert,
-    Fade
+    Fade,
+    alpha
 } from '@mui/material';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-import StudentForm from './components/StudentForm';
+import EditStudentForm from './components/EditStudentForm/EditStudentForm';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
@@ -69,13 +70,13 @@ const EditStudent = ({ id, onBack, onSubmit }) => {
         try {
             const response = await axios.put(`${API_URL}/student/${id}`, formData);
             if (response.data && response.data.success) {
-                onBack();
+                onSubmit(response.data.data);
             } else {
-                throw new Error('Failed to update student');
+                throw new Error(response.data.error || 'Failed to update student');
             }
         } catch (error) {
             console.error('Error updating student:', error);
-            setError(error.response?.data?.message || 'Failed to update student. Please try again.');
+            setError(error.message || 'Failed to update student. Please try again.');
         } finally {
             setIsSaving(false);
         }
@@ -83,46 +84,87 @@ const EditStudent = ({ id, onBack, onSubmit }) => {
 
     if (isLoading) {
         return (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: '80vh'
+                }}
+            >
                 <CircularProgress />
             </Box>
         );
     }
 
     return (
-        <Container maxWidth="lg">
-            <Box sx={{ width: '100%', maxWidth: '100%', p: 2 }}>
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 4,
+                    minHeight: '80vh'
+                }}
+            >
+                {/* Header */}
                 <Paper
+                    elevation={theme.palette.mode === 'dark' ? 2 : 1}
                     sx={{
-                        p: 3,
-                        backgroundColor: theme.palette.mode === 'dark' ? '#1a1f2c' : '#ffffff',
+                        p: 2,
+                        backgroundColor: theme.palette.mode === 'dark'
+                            ? alpha(theme.palette.primary.dark, 0.2)
+                            : alpha(theme.palette.primary.light, 0.1),
                         borderRadius: 2,
-                        boxShadow: theme.palette.mode === 'dark'
-                            ? '0 4px 6px rgba(0, 0, 0, 0.4)'
-                            : '0 2px 4px rgba(0, 0, 0, 0.1)',
+                        transition: 'all 0.3s ease-in-out'
                     }}
                 >
-                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-                        <Typography variant="h4" component="h1" gutterBottom>
-                            Edit Student
-                        </Typography>
-                        <Button
-                            variant="outlined"
-                            onClick={onBack}
-                            startIcon={<ArrowBackIcon />}
-                            sx={{
-                                color: theme.palette.mode === 'dark' ? '#3498db' : '#2980b9',
-                                borderColor: theme.palette.mode === 'dark' ? '#3498db' : '#2980b9',
-                                '&:hover': {
-                                    borderColor: theme.palette.mode === 'dark' ? '#2980b9' : '#2471a3',
-                                    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(52, 152, 219, 0.1)' : 'rgba(41, 128, 185, 0.1)',
-                                },
-                            }}
-                        >
-                            Back to List
-                        </Button>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Button
+                                startIcon={<ArrowBackIcon />}
+                                onClick={onBack}
+                                sx={{
+                                    color: theme.palette.primary.main,
+                                    '&:hover': {
+                                        backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                                    },
+                                    transition: 'all 0.2s ease-in-out'
+                                }}
+                            >
+                                Back
+                            </Button>
+                            <Typography
+                                variant="h4"
+                                component="h1"
+                                sx={{
+                                    color: theme.palette.primary.main,
+                                    fontWeight: 600,
+                                    letterSpacing: '0.5px'
+                                }}
+                            >
+                                Edit Student
+                            </Typography>
+                        </Box>
                     </Box>
+                </Paper>
 
+                {/* Main Content */}
+                <Paper
+                    elevation={theme.palette.mode === 'dark' ? 2 : 1}
+                    sx={{
+                        p: 3,
+                        backgroundColor: theme.palette.background.paper,
+                        borderRadius: 2,
+                        transition: 'all 0.3s ease-in-out'
+                    }}
+                >
                     <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
                         {steps.map((label) => (
                             <Step key={label}>
@@ -151,10 +193,10 @@ const EditStudent = ({ id, onBack, onSubmit }) => {
                     )}
 
                     <Box sx={{ p: 3, backgroundColor: 'transparent' }}>
-                        <StudentForm
+                        <EditStudentForm
                             onSubmit={activeStep === steps.length - 1 ? handleSubmit : handleNext}
                             isLoading={isSaving}
-                            initialData={studentData}
+                            studentData={studentData}
                             activeStep={activeStep}
                             onBack={activeStep === 0 ? null : handleBack}
                         />

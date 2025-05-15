@@ -48,6 +48,16 @@ const StudentForm = ({ onSubmit, isLoading, initialData, activeStep, onBack }) =
     const [showSuccess, setShowSuccess] = useState(false);
 
     const validateInput = useCallback((name, value) => {
+        if (name === 'studentID') {
+            if (!value || value.trim() === '') {
+                return 'Student ID is required';
+            }
+            if (!/^[A-Z0-9]{6,10}$/.test(value)) {
+                return 'Student ID must be 6-10 alphanumeric characters';
+            }
+            return '';
+        }
+
         if (validationHelpers.isEmptyOrWhitespace(value)) {
             return `${formatFieldName(name)} is required`;
         }
@@ -60,7 +70,23 @@ const StudentForm = ({ onSubmit, isLoading, initialData, activeStep, onBack }) =
     // Debounced student ID check
     const debouncedCheckStudentID = useCallback(
         debounce(async (studentID) => {
-            if (!studentID || validationHelpers.isEmptyOrWhitespace(studentID)) return;
+            if (!studentID || validationHelpers.isEmptyOrWhitespace(studentID)) {
+                setErrors(prev => ({
+                    ...prev,
+                    studentID: 'Student ID is required'
+                }));
+                setIsValidID(false);
+                return;
+            }
+
+            if (!/^[A-Z0-9]{6,10}$/.test(studentID)) {
+                setErrors(prev => ({
+                    ...prev,
+                    studentID: 'Student ID must be 6-10 alphanumeric characters'
+                }));
+                setIsValidID(false);
+                return;
+            }
             
             setIsCheckingID(true);
             try {
@@ -111,47 +137,52 @@ const StudentForm = ({ onSubmit, isLoading, initialData, activeStep, onBack }) =
             [name]: value
         }));
 
-        // Immediate validation for all fields
+        // Special handling for student ID
+        if (name === 'studentID') {
+            setIsValidID(false);
+            if (value.trim() === '') {
+                setErrors(prev => ({
+                    ...prev,
+                    studentID: 'Student ID is required'
+                }));
+            } else if (!/^[A-Z0-9]{6,10}$/.test(value)) {
+                setErrors(prev => ({
+                    ...prev,
+                    studentID: 'Student ID must be 6-10 alphanumeric characters'
+                }));
+            } else {
+                debouncedCheckStudentID(value);
+            }
+            return;
+        }
+
+        // Immediate validation for other fields
         const errorMessage = validateInput(name, value);
         setErrors(prev => ({
             ...prev,
             [name]: errorMessage
         }));
-
-        // Special handling for student ID
-        if (name === 'studentID') {
-            setIsValidID(false);
-            if (validationHelpers.isValidInput(value)) {
-                debouncedCheckStudentID(value);
-            }
-        }
-
-        // Validate all text inputs for spaces-only
-        if (typeof value === 'string') {
-            if (validationHelpers.isOnlySpaces(value)) {
-                setErrors(prev => ({
-                    ...prev,
-                    [name]: `${formatFieldName(name)} cannot contain only spaces`
-                }));
-            } else if (validationHelpers.isEmptyOrWhitespace(value)) {
-                setErrors(prev => ({
-                    ...prev,
-                    [name]: `${formatFieldName(name)} is required`
-                }));
-            } else {
-                // Clear error if input is valid
-                setErrors(prev => ({
-                    ...prev,
-                    [name]: ''
-                }));
-            }
-        }
     }, [debouncedCheckStudentID, validateInput]);
 
     const handleBlur = useCallback((e) => {
         const { name, value } = e.target;
         
-        // Validate on blur for all fields
+        if (name === 'studentID') {
+            if (value.trim() === '') {
+                setErrors(prev => ({
+                    ...prev,
+                    studentID: 'Student ID is required'
+                }));
+            } else if (!/^[A-Z0-9]{6,10}$/.test(value)) {
+                setErrors(prev => ({
+                    ...prev,
+                    studentID: 'Student ID must be 6-10 alphanumeric characters'
+                }));
+            }
+            return;
+        }
+
+        // Validate on blur for other fields
         if (typeof value === 'string') {
             if (validationHelpers.isOnlySpaces(value)) {
                 setErrors(prev => ({
@@ -384,7 +415,7 @@ const StudentForm = ({ onSubmit, isLoading, initialData, activeStep, onBack }) =
                         type="submit"
                         variant="contained"
                         color="primary"
-                        disabled={isLoading}
+                        disabled={isLoading || (activeStep === 0 && !isValidID)}
                         endIcon={activeStep === 3 ? <SaveIcon /> : <ChevronRightIcon />}
                         sx={{
                             minWidth: 120,

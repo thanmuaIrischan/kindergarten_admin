@@ -10,16 +10,15 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, Save as SaveIcon } from '@mui/icons-material';
 import { format } from 'date-fns';
-import debounce from 'lodash/debounce';
 
-import { API_URL, validationHelpers, formatFieldName } from '../StudentForm/constants';
+import { validationHelpers, formatFieldName } from '../StudentForm/constants';
 import BasicInfoSection from '../StudentForm/BasicInfoSection';
 import EducationInfoSection from '../StudentForm/EducationInfoSection';
 import ParentInfoSection from '../StudentForm/ParentInfoSection';
 import DocumentsSection from '../StudentForm/DocumentsSection';
 import ReviewSection from '../StudentForm/ReviewSection';
 
-const EditForm = ({ onSubmit, isLoading, studentData, activeStep, onBack }) => {
+const EditStudentForm = ({ onSubmit, isLoading, studentData, activeStep, onBack }) => {
     const theme = useTheme();
     const [formData, setFormData] = useState({
         studentID: studentData?.studentID || '',
@@ -43,8 +42,6 @@ const EditForm = ({ onSubmit, isLoading, studentData, activeStep, onBack }) => {
 
     const [errors, setErrors] = useState({});
     const [uploadError, setUploadError] = useState('');
-    const [isCheckingID, setIsCheckingID] = useState(false);
-    const [isValidID, setIsValidID] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
 
     const validateInput = useCallback((name, value) => {
@@ -56,55 +53,6 @@ const EditForm = ({ onSubmit, isLoading, studentData, activeStep, onBack }) => {
         }
         return '';
     }, []);
-
-    // Debounced student ID check (only if ID has changed)
-    const debouncedCheckStudentID = useCallback(
-        debounce(async (studentID) => {
-            if (!studentID || validationHelpers.isEmptyOrWhitespace(studentID)) return;
-            if (studentID === studentData?.studentID) {
-                setIsValidID(true);
-                return;
-            }
-            
-            setIsCheckingID(true);
-            try {
-                const response = await fetch(`${API_URL}/student/check-id/${studentID}`);
-                if (!response.ok) {
-                    throw new Error('Failed to check student ID');
-                }
-
-                const data = await response.json();
-                
-                if (!data.success) {
-                    throw new Error(data.error || 'Failed to check student ID');
-                }
-                
-                if (data.exists) {
-                    setErrors(prev => ({
-                        ...prev,
-                        studentID: data.message || 'This Student ID already exists'
-                    }));
-                    setIsValidID(false);
-                } else {
-                    setErrors(prev => ({
-                        ...prev,
-                        studentID: ''
-                    }));
-                    setIsValidID(true);
-                }
-            } catch (error) {
-                console.error('Error checking student ID:', error);
-                setErrors(prev => ({
-                    ...prev,
-                    studentID: error.message || 'Error checking student ID'
-                }));
-                setIsValidID(false);
-            } finally {
-                setIsCheckingID(false);
-            }
-        }, 500),
-        [studentData?.studentID]
-    );
 
     const handleInputChange = useCallback((e) => {
         const { name, value } = e.target;
@@ -121,36 +69,7 @@ const EditForm = ({ onSubmit, isLoading, studentData, activeStep, onBack }) => {
             ...prev,
             [name]: errorMessage
         }));
-
-        // Special handling for student ID
-        if (name === 'studentID') {
-            setIsValidID(false);
-            if (validationHelpers.isValidInput(value)) {
-                debouncedCheckStudentID(value);
-            }
-        }
-
-        // Validate all text inputs for spaces-only
-        if (typeof value === 'string') {
-            if (validationHelpers.isOnlySpaces(value)) {
-                setErrors(prev => ({
-                    ...prev,
-                    [name]: `${formatFieldName(name)} cannot contain only spaces`
-                }));
-            } else if (validationHelpers.isEmptyOrWhitespace(value)) {
-                setErrors(prev => ({
-                    ...prev,
-                    [name]: `${formatFieldName(name)} is required`
-                }));
-            } else {
-                // Clear error if input is valid
-                setErrors(prev => ({
-                    ...prev,
-                    [name]: ''
-                }));
-            }
-        }
-    }, [debouncedCheckStudentID, validateInput]);
+    }, [validateInput]);
 
     const handleBlur = useCallback((e) => {
         const { name, value } = e.target;
@@ -319,8 +238,8 @@ const EditForm = ({ onSubmit, isLoading, studentData, activeStep, onBack }) => {
                         handleInputChange={handleInputChange}
                         handleBlur={handleBlur}
                         handleDateChange={handleDateChange}
-                        isCheckingID={isCheckingID}
-                        isValidID={isValidID}
+                        isCheckingID={false}
+                        isValidID={true}
                     />
                 );
             case 1:
@@ -354,7 +273,7 @@ const EditForm = ({ onSubmit, isLoading, studentData, activeStep, onBack }) => {
             default:
                 return null;
         }
-    }, [activeStep, formData, errors, handleInputChange, handleBlur, handleDateChange, handleFileChange, uploadError, isCheckingID, isValidID]);
+    }, [activeStep, formData, errors, handleInputChange, handleBlur, handleDateChange, handleFileChange, uploadError]);
 
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -426,4 +345,4 @@ const EditForm = ({ onSubmit, isLoading, studentData, activeStep, onBack }) => {
     );
 };
 
-export default React.memo(EditForm); 
+export default EditStudentForm; 
