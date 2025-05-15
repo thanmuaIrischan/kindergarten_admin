@@ -7,7 +7,6 @@ import CalendarPanel from './CalendarPanel';
 import StudentList from '../../modules/student/StudentList';
 import AddStudent from '../../modules/student/AddStudent';
 import EditStudent from '../../modules/student/EditStudent';
-import EditForm from '../../modules/student/components/EditForm/EditForm';
 import StudentDetails from '../../modules/student/components/StudentDetails';
 import ClassList from '../../modules/class/ClassList';
 import AddClass from '../../modules/class/components/AddClass';
