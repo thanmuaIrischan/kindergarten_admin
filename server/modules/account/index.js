@@ -1,5 +1,4 @@
 const { db } = require('../../config/firebase');
-const accountRoutes = require('./routes/accountRoutes');
 
 class AccountService {
     constructor() {
@@ -16,6 +15,13 @@ class AccountService {
             }
 
             const account = snapshot.docs[0].data();
+            
+            // Check if user is admin
+            if (account.role !== 'admin') {
+                console.log('User is not an admin. Access denied.');
+                return { success: false, message: 'Access denied. Only administrators are allowed.' };
+            }
+
             if (account.password !== password) {
                 return { success: false, message: 'Invalid password' };
             }
@@ -47,4 +53,5 @@ class AccountService {
     }
 }
 
-module.exports = accountRoutes; 
+// Export an instance of AccountService instead of accountRoutes
+module.exports = new AccountService(); 

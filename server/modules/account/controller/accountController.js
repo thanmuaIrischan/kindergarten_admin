@@ -27,6 +27,12 @@ const authenticate = async (req, res) => {
     if (!result.success) {
       return res.status(401).json(result);
     }
+
+    // Ensure we're not sending sensitive data back
+    if (result.data) {
+      delete result.data.password;
+    }
+
     res.json(result);
   } catch (error) {
     console.error('Authentication error details:', error);
@@ -45,6 +51,12 @@ const getAccountById = async (req, res) => {
     if (!result.success) {
       return res.status(404).json(result);
     }
+
+    // Ensure we're not sending sensitive data back
+    if (result.data) {
+      delete result.data.password;
+    }
+
     res.json(result);
   } catch (error) {
     console.error('Error getting account:', error);

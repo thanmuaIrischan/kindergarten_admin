@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaUser, FaLock, FaEye, FaEyeSlash, FaSun, FaMoon, FaSchool } from 'react-icons/fa';
+import { FaUser, FaLock, FaEye, FaEyeSlash, FaSun, FaMoon, FaSchool, FaExclamationTriangle } from 'react-icons/fa';
 import { useTheme } from '../../context/ThemeContext';
 import './Login.css';
 
@@ -30,6 +30,12 @@ const Login = () => {
       console.log('Login response:', response.data);
 
       if (response.data.success && response.data.data) {
+        if (response.data.data.role !== 'admin') {
+          setError('Access Denied. Only administrators are allowed to access this system.');
+          setIsLoading(false);
+          return;
+        }
+
         localStorage.setItem('user', JSON.stringify(response.data.data));
         console.log('User data stored:', response.data.data);
         setIsLoading(false);
@@ -42,7 +48,22 @@ const Login = () => {
       }
     } catch (err) {
       console.error('Login error:', err);
-      const errorMessage = err.response?.data?.message || 'An error occurred during login';
+      let errorMessage;
+      
+      if (err.response) {
+        if (err.response.data && err.response.data.message) {
+          errorMessage = err.response.data.message;
+        } else if (err.response.status === 401) {
+          errorMessage = 'Access denied. Only administrators are allowed to access this system.';
+        } else {
+          errorMessage = 'Login failed. Please try again.';
+        }
+      } else if (err.request) {
+        errorMessage = 'Unable to connect to server. Please try again later.';
+      } else {
+        errorMessage = 'An error occurred. Please try again.';
+      }
+      
       setError(errorMessage);
       setIsLoading(false);
     }
@@ -77,14 +98,16 @@ const Login = () => {
           </div>
 
           {error && (
-            <div className="error-message">
-              <span className="error-icon">⚠️</span>
-              {error}
+            <div className="error-message-container">
+              <div className="error-message">
+                <FaExclamationTriangle className="error-icon" />
+                <span className="error-text">{error}</span>
+              </div>
             </div>
           )}
 
           <form onSubmit={handleLogin}>
-            <div className="form-group">
+            <div className={`form-group ${error ? 'has-error' : ''}`}>
               <label>
                 <FaUser className="input-icon" />
                 Username
@@ -95,10 +118,11 @@ const Login = () => {
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter your username"
                 required
+                className={error ? 'error-input' : ''}
               />
             </div>
 
-            <div className="form-group">
+            <div className={`form-group ${error ? 'has-error' : ''}`}>
               <label>
                 <FaLock className="input-icon" />
                 Password
@@ -110,6 +134,7 @@ const Login = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   required
+                  className={error ? 'error-input' : ''}
                 />
                 <button
                   type="button"
@@ -124,10 +149,10 @@ const Login = () => {
             <div className="form-actions">
               <button
                 type="submit"
-                className="login-button"
+                className={`login-button ${isLoading ? 'loading' : ''}`}
                 disabled={isLoading}
               >
-                Sign In
+                {isLoading ? 'Signing in...' : 'Sign In'}
               </button>
             </div>
           </form>
