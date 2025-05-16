@@ -1,11 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const routes = require('./routes');
 
 // Import all routes
 const accountRoutes = require("./modules/account/routes/accountRoutes");
-const newsRoutes = require("./modules/news/routes/newsRoutes");
+const newsRoutes = require("./modules/news");
 const twilioRoutes = require("./modules/twilio/routes/twilioRoutes");
 const studentRoutes = require("./modules/student/routes/student.routes");
 const semesterRoutes = require("./modules/semester/routes/semester.routes");
@@ -18,11 +17,6 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Increase payload size limit
-app.use(bodyParser.json({ limit: '50mb' }));
-app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -51,19 +45,10 @@ app.use((req, res, next) => {
 
 // Error handler
 app.use((err, req, res, next) => {
-    console.error('Error:', err);
-    
-    // Ensure we have a valid status code
-    const statusCode = err.statusCode || 500;
-    
-    // Ensure we have a valid status string
-    const status = err.status || (statusCode >= 400 && statusCode < 500 ? 'fail' : 'error');
-    
-    res.status(statusCode).json({
+    console.error(err.stack);
+    res.status(500).json({
         success: false,
-        status,
-        message: err.message || 'Internal server error',
-        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+        message: 'Internal Server Error'
     });
 });
 
