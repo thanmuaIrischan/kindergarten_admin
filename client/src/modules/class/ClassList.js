@@ -47,6 +47,7 @@ import { useReactToPrint } from 'react-to-print';
 import { getAllClasses, deleteClass } from './api/class.api';
 import ClassTable from './components/ClassTable';
 import { useLocation } from 'react-router-dom';
+import { printClassList } from './services/PrintService';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
@@ -475,10 +476,10 @@ const ClassList = ({ onEdit, onAdd, onViewDetails }) => {
                             </IconButton>
                         </span>
                     </Tooltip>
-                    <Tooltip title="Print">
+                    <Tooltip title="Print List">
                         <span>
                             <IconButton
-                                onClick={handlePrint}
+                                onClick={() => printClassList(classesWithSemester)}
                                 size="small"
                                 sx={actionButtonStyle}
                             >
