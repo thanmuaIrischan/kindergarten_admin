@@ -50,6 +50,7 @@ import {
     AssignmentInd as AssignmentIndIcon,
     SwapHorizontalCircle as SwapTeacherIcon,
 } from '@mui/icons-material';
+import axios from 'axios';
 
 import TeacherCard from './classDetails/TeacherCard';
 import StudentManagement from './classDetails/StudentManagement';
@@ -88,12 +89,14 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
     const [removeStudentOpen, setRemoveStudentOpen] = useState(false);
     const [transferStudentOpen, setTransferStudentOpen] = useState(false);
     const [selectedStudentsForTransfer, setSelectedStudentsForTransfer] = useState([]);
+    const [studentCount, setStudentCount] = useState(0);
 
     useEffect(() => {
         console.log('ClassDetails - classData changed:', {
             classData,
             id: classData?.id,
             teacherID: classData?.teacherID,
+            students: classData?.students,
             fullData: JSON.stringify(classData)
         });
 
@@ -102,7 +105,10 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
             return;
         }
 
+        // Update student count based on class data
+        setStudentCount(classData.students?.length || 0);
         loadStudents();
+        
         if (classData?.teacherID) {
             console.log('Initiating teacher fetch for ID:', classData.teacherID);
             loadTeacherDetails();
@@ -112,10 +118,42 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
     }, [classData]);
 
     const loadStudents = async () => {
+        console.log('Loading students for class:', classData.id);
         setLoading(true);
-        const fetchedStudents = await fetchStudents(classData.id);
-        setStudents(fetchedStudents);
-        setLoading(false);
+        try {
+            const fetchedStudents = await fetchStudents(classData.id);
+            console.log('Loaded students:', fetchedStudents);
+            
+            // Update student count based on actual fetched students
+            setStudentCount(fetchedStudents.length);
+            setStudents(fetchedStudents);
+
+            // If the class data shows more students than we could fetch, there might be inconsistency
+            if (classData.students?.length > fetchedStudents.length) {
+                console.warn('Some students in class list could not be found:', {
+                    classStudentCount: classData.students.length,
+                    fetchedStudentCount: fetchedStudents.length
+                });
+                
+                // Optional: Update class data to remove non-existent students
+                try {
+                    const updatedStudents = fetchedStudents.map(s => s.studentID);
+                    await axios.put(`${API_URL}/class/${classData.id}`, {
+                        ...classData,
+                        students: updatedStudents
+                    });
+                    console.log('Updated class with correct student list');
+                } catch (updateError) {
+                    console.error('Failed to update class with correct student list:', updateError);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading students:', error);
+            setStudents([]);
+            setStudentCount(0);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const loadTeacherDetails = async () => {
@@ -239,27 +277,86 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
     };
 
     const handleStudentAdd = async (student, updatedClass) => {
-        await addStudentToClass(student, classData.id, async () => {
-            await loadStudents();
-            setAddStudentOpen(false);
-        });
+        try {
+            await addStudentToClass(student, classData.id, async () => {
+                console.log('Student added successfully, reloading students...');
+                // Get fresh class data to update student count
+                const classResponse = await axios.get(`${API_URL}/class/${classData.id}`);
+                const freshClassData = classResponse.data.data;
+                setStudentCount(freshClassData.students?.length || 0);
+                await loadStudents();
+                setAddStudentOpen(false);
+            });
+        } catch (error) {
+            console.error('Error adding student:', error);
+            setAddStudentOpen(true);
+        }
     };
 
     const handleStudentRemove = async (student, updatedClass) => {
-        await removeStudentFromClass(student, classData.id, async () => {
-            await loadStudents();
-            setRemoveStudentOpen(false);
-            setSelectedStudent(null);
-        });
+        try {
+            await removeStudentFromClass(student, classData.id, async () => {
+                console.log('Student removed successfully, reloading students...');
+                // Get fresh class data to update student count
+                const classResponse = await axios.get(`${API_URL}/class/${classData.id}`);
+                const freshClassData = classResponse.data.data;
+                setStudentCount(freshClassData.students?.length || 0);
+                await loadStudents();
+                setRemoveStudentOpen(false);
+                setSelectedStudent(null);
+            });
+        } catch (error) {
+            console.error('Error removing student:', error);
+            setRemoveStudentOpen(true);
+        }
     };
 
     const handleStudentTransfer = async (students, targetClass, updatedClass) => {
-        await transferStudentsToClass(students, targetClass, classData.id, async () => {
-            await loadStudents();
-            setTransferStudentOpen(false);
-            setSelectedStudent(null);
-            setSelectedStudentsForTransfer([]);
-        });
+        try {
+            await transferStudentsToClass(students, targetClass, classData.id, async () => {
+                console.log('Students transferred successfully, reloading students...');
+                // Get fresh class data to update student count
+                const classResponse = await axios.get(`${API_URL}/class/${classData.id}`);
+                const freshClassData = classResponse.data.data;
+                setStudentCount(freshClassData.students?.length || 0);
+                await loadStudents();
+                setTransferStudentOpen(false);
+                setSelectedStudent(null);
+                setSelectedStudentsForTransfer([]);
+            });
+        } catch (error) {
+            console.error('Error transferring students:', error);
+            setTransferStudentOpen(true);
+        }
+    };
+
+    // Add useEffect to update student count whenever classData changes
+    useEffect(() => {
+        if (classData?.id) {
+            const updateStudentCount = async () => {
+                try {
+                    const classResponse = await axios.get(`${API_URL}/class/${classData.id}`);
+                    const freshClassData = classResponse.data.data;
+                    setStudentCount(freshClassData.students?.length || 0);
+                } catch (error) {
+                    console.error('Error updating student count:', error);
+                }
+            };
+            updateStudentCount();
+        }
+    }, [classData]);
+
+    // Add function to refresh student count
+    const refreshStudentCount = async () => {
+        if (classData?.id) {
+            try {
+                const classResponse = await axios.get(`${API_URL}/class/${classData.id}`);
+                const freshClassData = classResponse.data.data;
+                setStudentCount(freshClassData.students?.length || 0);
+            } catch (error) {
+                console.error('Error refreshing student count:', error);
+            }
+        }
     };
 
     const TeacherActionButton = ({ hasTeacher }) => (
@@ -572,7 +669,7 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
                             </Grid>
                             <Grid item xs={12}>
                                 <StudentManagement
-                                    studentCount={students.length}
+                                    studentCount={studentCount}
                                     onAction={handleStudentAction}
                                     selectedStudents={selectedStudentsForTransfer}
                                 />

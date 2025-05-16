@@ -3,72 +3,140 @@ import axios from 'axios';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
 export const fetchStudents = async (classId) => {
-    if (!classId) {
-        console.error('Cannot fetch students - missing class ID');
-        return [];
-    }
-
     try {
-        // Get fresh class data to get the latest student IDs
+        // Get the class data first to get the current list of student IDs
         const classResponse = await axios.get(`${API_URL}/class/${classId}`);
-        const freshClassData = classResponse.data.data;
-        const studentIDs = freshClassData.students || [];
-
-        console.log('Fresh class data:', freshClassData);
-        console.log('Student IDs:', studentIDs);
-
-        if (!studentIDs || studentIDs.length === 0) {
-            console.log('No students found in class');
+        const classData = classResponse.data.data;
+        
+        if (!classData || !classData.students || !Array.isArray(classData.students)) {
+            console.log('No students found in class or invalid class data');
             return [];
         }
 
-        // Fetch each student's details from the student table
-        const studentPromises = studentIDs.map(async (studentId) => {
-            try {
-                const response = await axios.get(`${API_URL}/student/${studentId}`);
-                const studentData = response.data.data;
-                console.log('Fetched student data:', studentData);
-                return {
-                    id: studentData.id,
-                    studentID: studentData.studentID,
-                    firstName: studentData.firstName,
-                    lastName: studentData.lastName,
-                    gender: studentData.gender,
-                    dateOfBirth: studentData.dateOfBirth,
-                    phone: studentData.phone,
-                    email: studentData.email,
-                    address: studentData.address,
-                    avatar: studentData.avatar
-                };
-            } catch (error) {
-                console.error(`Failed to fetch student ${studentId}:`, error);
-                return null;
-            }
+        // Get all students
+        const studentsResponse = await axios.get(`${API_URL}/student`);
+        const allStudents = studentsResponse.data.data || [];
+
+        // Filter students that are actually in the class based on the class's student list
+        const classStudents = allStudents.filter(student => 
+            classData.students.includes(student.studentID)
+        );
+
+        console.log('Fetched students for class:', {
+            classId,
+            totalStudentsInClass: classData.students.length,
+            matchedStudents: classStudents.length
         });
 
-        const studentResponses = await Promise.all(studentPromises);
-        return studentResponses.filter(Boolean);
+        return classStudents;
     } catch (error) {
-        console.error('Error in fetchStudents:', error);
-        return [];
+        console.error('Error fetching students:', error);
+        throw error;
     }
 };
 
 export const addStudentToClass = async (student, classId, onSuccess) => {
     try {
-        console.log('Student added:', student);
-        await onSuccess();
+        if (!classId) {
+            throw new Error('Class ID is required');
+        }
+
+        // Get current class data
+        const classResponse = await axios.get(`${API_URL}/class/${classId}`);
+        const currentClass = classResponse.data.data;
+
+        // Get current student IDs
+        const currentStudents = currentClass.students || [];
+        const studentsToAdd = Array.isArray(student) ? student : [student];
+        const newStudentIds = studentsToAdd.map(s => s.studentID);
+
+        // Check for duplicates with detailed information
+        const duplicateStudents = studentsToAdd.filter(s => 
+            currentStudents.includes(s.studentID)
+        );
+
+        if (duplicateStudents.length > 0) {
+            const duplicateNames = duplicateStudents
+                .map(s => `${s.firstName} ${s.lastName} (${s.studentID})`)
+                .join(', ');
+            throw new Error(`The following students are already in this class: ${duplicateNames}`);
+        }
+
+        // Filter out any undefined or null student IDs
+        const validStudentIds = newStudentIds.filter(id => id);
+        if (validStudentIds.length === 0) {
+            throw new Error('No valid students to add');
+        }
+
+        // Update class with new students
+        const updatedStudents = [...currentStudents, ...validStudentIds];
+        
+        // Update the class
+        const response = await axios.put(`${API_URL}/class/${classId}`, {
+            ...currentClass,
+            students: updatedStudents
+        });
+
+        if (response.data.success) {
+            const addedCount = validStudentIds.length;
+            console.log('Successfully added students:', {
+                added: validStudentIds,
+                addedCount,
+                total: updatedStudents.length
+            });
+            await onSuccess();
+        } else {
+            throw new Error('Failed to update class with new students');
+        }
     } catch (error) {
         console.error('Error in addStudentToClass:', error);
+        // Enhance error message for UI display
+        if (error.response?.data?.message) {
+            throw new Error(`Server Error: ${error.response.data.message}`);
+        } else {
+            throw error;
+        }
     }
 };
 
 export const removeStudentFromClass = async (student, classId, onSuccess) => {
     try {
-        console.log('Student removed:', student);
-        await onSuccess();
+        if (!classId) {
+            throw new Error('Class ID is required');
+        }
+
+        // Get current class data
+        const classResponse = await axios.get(`${API_URL}/class/${classId}`);
+        const currentClass = classResponse.data.data;
+
+        // Get current student IDs
+        const currentStudents = currentClass.students || [];
+        const studentsToRemove = Array.isArray(student) ? student : [student];
+        const studentIdsToRemove = studentsToRemove.map(s => s.studentID);
+
+        // Remove the students
+        const updatedStudents = currentStudents.filter(
+            studentId => !studentIdsToRemove.includes(studentId)
+        );
+
+        // Update the class
+        const response = await axios.put(`${API_URL}/class/${classId}`, {
+            ...currentClass,
+            students: updatedStudents
+        });
+
+        if (response.data.success) {
+            console.log('Successfully removed students:', {
+                removed: studentIdsToRemove,
+                remaining: updatedStudents.length
+            });
+            await onSuccess();
+        } else {
+            throw new Error('Failed to remove students from class');
+        }
     } catch (error) {
         console.error('Error in removeStudentFromClass:', error);
+        throw error;
     }
 };
 

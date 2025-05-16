@@ -170,7 +170,20 @@ const StudentManagement = ({ studentCount, onAction, selectedStudents = [] }) =>
                 borderRadius: 2,
             }}
         >
-            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+            <CardContent>
+                <Box sx={{ mb: 2 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                        Student Management
+                    </Typography>
+                    <Stack direction="row" alignItems="center">
+                        <Typography variant="body2" color="text.secondary">
+                            Total Students:
+                        </Typography>
+                        <Typography variant="subtitle2" color="primary" sx={{ mr: 0.5 }}>
+                            {studentCount || 0}
+                        </Typography>
+                    </Stack>
+                </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <CompactView />
                     <Tooltip title={showDetails ? "Show less" : "View details"}>

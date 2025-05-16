@@ -21,6 +21,7 @@ import {
     SwapHoriz as TransferIcon,
     Delete as DeleteIcon,
 } from '@mui/icons-material';
+import { getStudentDisplayName, getStudentNameInitial } from '../../services/StudentDisplayService';
 
 const StudentGrid = ({
     students,
@@ -188,7 +189,7 @@ const StudentGrid = ({
                                             backgroundColor: theme.palette.primary.main,
                                         }}
                                     >
-                                        {`${student.firstName[0]}${student.lastName[0]}`}
+                                        {getStudentNameInitial(student)}
                                     </Avatar>
                                     <Box sx={{
                                         flex: 1,
@@ -214,7 +215,7 @@ const StudentGrid = ({
                                                 fontSize: '1rem'
                                             }}
                                         >
-                                            {`${student.lastName} ${student.firstName}`}
+                                            {getStudentDisplayName(student)}
                                         </Typography>
                                         <Typography
                                             variant="caption"
