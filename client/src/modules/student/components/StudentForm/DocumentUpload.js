@@ -55,7 +55,10 @@ const DocumentUpload = ({ title, name, value, onChange, accept, error }) => {
         try {
             const formData = new FormData();
             formData.append('file', file);
-            formData.append('documentType', name);
+            
+            // Extract documentType from name (e.g., "studentDocument.image" -> "image")
+            const documentType = name.split('.')[1];
+            formData.append('documentType', documentType);
 
             // Use XMLHttpRequest for better progress tracking
             const xhr = new XMLHttpRequest();
@@ -173,40 +176,82 @@ const DocumentUpload = ({ title, name, value, onChange, accept, error }) => {
                             </Typography>
                         </Box>
                     ) : value ? (
-                        <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
+                        <Box 
+                            sx={{ 
+                                position: 'relative',
+                                width: '100%',
+                                height: '100%',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: 1
+                            }}
+                        >
                             <Box
-                                component="img"
-                                src={value.url}
-                                alt={title}
                                 sx={{
-                                    maxWidth: '100%',
-                                    maxHeight: '80px',
-                                    objectFit: 'contain'
-                                }}
-                            />
-                            <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onChange({ target: { name, value: null } });
-                                }}
-                                sx={{
-                                    position: 'absolute',
-                                    top: -8,
-                                    right: -8,
-                                    backgroundColor: theme.palette.background.paper,
-                                    '&:hover': {
-                                        backgroundColor: theme.palette.error.light
-                                    }
+                                    position: 'relative',
+                                    width: '100%',
+                                    height: '80px',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center'
                                 }}
                             >
-                                <DeleteIcon fontSize="small" />
-                            </IconButton>
+                                <Box
+                                    component="img"
+                                    src={value.url}
+                                    alt={title}
+                                    sx={{
+                                        maxWidth: '100%',
+                                        maxHeight: '80px',
+                                        objectFit: 'contain',
+                                        borderRadius: 1,
+                                        boxShadow: theme.shadows[1]
+                                    }}
+                                />
+                                <IconButton
+                                    size="small"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        e.preventDefault();
+                                        onChange({ target: { name, value: null } });
+                                    }}
+                                    sx={{
+                                        position: 'absolute',
+                                        top: -8,
+                                        right: -8,
+                                        backgroundColor: theme.palette.error.light,
+                                        color: theme.palette.common.white,
+                                        '&:hover': {
+                                            backgroundColor: theme.palette.error.main,
+                                        },
+                                        boxShadow: theme.shadows[2]
+                                    }}
+                                >
+                                    <DeleteIcon fontSize="small" />
+                                </IconButton>
+                            </Box>
+                            <Typography 
+                                variant="caption" 
+                                color="textSecondary"
+                                sx={{
+                                    mt: 0.5,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 0.5
+                                }}
+                            >
+                                <UploadIcon fontSize="small" />
+                                Click to change {title}
+                            </Typography>
                         </Box>
                     ) : (
-                        <Typography>
-                            Click or drag to upload {title}
-                        </Typography>
+                        <Box sx={{ textAlign: 'center' }}>
+                            <UploadIcon sx={{ fontSize: 40, color: theme.palette.text.secondary, mb: 1 }} />
+                            <Typography color="textSecondary">
+                                Click or drag to upload {title}
+                            </Typography>
+                        </Box>
                     )}
                 </Button>
             </label>

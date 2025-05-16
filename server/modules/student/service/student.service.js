@@ -1,15 +1,11 @@
 const { db } = require('../../../config/firebase');
-const xlsx = require('xlsx');
-const imageService = require('./image.service');
+const ExcelJS = require('exceljs');
 const cloudinary = require('cloudinary').v2;
 const { validateStudent } = require('../validation/student.validation');
 const { StudentRepository } = require('../repository/student.repository');
+const { toFirebaseFormat } = require('../model/student.model');
 const ErrorResponse = require('../../../utils/errorResponse');
-const XLSX = require('xlsx');
-const { studentModel, toFirebaseFormat } = require('../model/student.model');
-const ExcelJS = require('exceljs');
 
-// Configure Cloudinary
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -21,276 +17,208 @@ class StudentService {
         this.studentRepository = new StudentRepository();
     }
 
-    // Helper method to convert Firebase data to client format
-    _convertToClientFormat(doc) {
-        const data = doc.data();
-        const profile = data.studentProfile || {};
-        const documents = data.studentDocument || {};
-
-        const rawStudent = {
-            id: doc.id,
-            firstName: profile.name ? profile.name.split(' ').pop() : '',
-            lastName: profile.name ? profile.name.split(' ').slice(0, -1).join(' ') : '',
-            class: profile.class || '',
-            parentName: profile.fatherFullname || '',
-            parentContact: profile.parentContact || '',
-            gender: profile.gender || '',
-            dateOfBirth: profile.dateOfBirth || '',
-            school: profile.school || '',
-            gradeLevel: profile.gradeLevel || '',
-            educationSystem: profile.educationSystem || '',
-            studentID: profile.studentID || '',
-            motherName: profile.motherFullname || '',
-            fatherOccupation: profile.fatherOccupation || '',
-            motherOccupation: profile.motherOccupation || '',
-            studentDocument: {
-                image: documents.image || '',
-                birthCertificate: documents.birthCertificate || '',
-                householdRegistration: documents.householdRegistration || ''
-            }
-        };
-
-        // Process images using ImageService
-        return imageService.processStudentImages(rawStudent);
-    }
-
-    // Helper method to convert client data to Firebase format
-    _convertToFirebaseFormat(studentData) {
-        const fullName = `${studentData.lastName} ${studentData.firstName}`.trim();
-        return {
-            studentProfile: {
-                name: fullName,
-                class: studentData.class,
-                fatherFullname: studentData.parentName,
-                parentContact: studentData.parentContact,
-                gender: studentData.gender,
-                dateOfBirth: studentData.dateOfBirth,
-                school: studentData.school,
-                gradeLevel: studentData.gradeLevel,
-                educationSystem: studentData.educationSystem,
-                studentID: studentData.studentID,
-                motherFullname: studentData.motherName,
-                fatherOccupation: studentData.fatherOccupation,
-                motherOccupation: studentData.motherOccupation
-            },
-            studentDocument: {
-                image: studentData.image || '',
-                birthCertificate: studentData.birthCertificate || '',
-                householdRegistration: studentData.householdRegistration || ''
-            }
-        };
-    }
-
-    async getAllStudents() {
+    async getAllStudents({ page = 1, limit = 10 } = {}) {
         try {
-            if (!db) {
-                throw new Error('Firebase database connection not initialized');
-            }
-
-            const studentsRef = db.collection('student');
-            const snapshot = await studentsRef.get();
-
-            if (snapshot.empty) {
-                return [];
-            }
-
-            const students = [];
-            snapshot.forEach(doc => {
-                try {
-                    const converted = this._convertToClientFormat(doc);
-                    students.push(converted);
-                } catch (docError) {
-                    // Skip invalid documents
-                }
-            });
-
+            const students = await this.studentRepository.findAll({ page, limit });
             return students;
         } catch (error) {
-            throw error;
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(`Error retrieving students: ${error.message}`, 500);
         }
     }
 
     async getStudentById(id) {
         try {
-            const studentDoc = await db.collection('student').doc(id).get();
-            if (!studentDoc.exists) {
-                throw new ErrorResponse('Student not found', 404);
-            }
-            return this._convertToClientFormat(studentDoc);
-        } catch (error) {
-            if (error instanceof ErrorResponse) {
-                throw error;
-            }
-            throw new ErrorResponse('Error retrieving student', 500);
-        }
-    }
-
-    async createStudent(studentData) {
-        try {
-            // Validate required fields
-            if (!studentData.studentProfile || !studentData.studentProfile.studentID) {
-                throw new ErrorResponse('Missing required student information', 400);
-            }
-
-            // Check if student ID already exists
-            const existingStudent = await this.studentRepository.findById(studentData.studentProfile.studentID);
-            if (existingStudent) {
-                throw new ErrorResponse('Student ID already exists', 400);
-            }
-
-            // Create student in Firebase
-            const studentRef = await this.studentRepository.create(studentData);
-            return studentRef;
+            const student = await this.studentRepository.findById(id);
+            return student;
         } catch (error) {
             throw error;
         }
     }
 
-    async updateStudent(id, studentData) {
-        // Validate update data
-        const { error } = validateStudent(studentData);
-        if (error) {
-            throw new ErrorResponse(error.details[0].message, 400);
-        }
-
-        const student = await this.studentRepository.findById(id);
-        if (!student) {
-            throw new ErrorResponse('Student not found', 404);
-        }
-
-        // Handle file updates
-        const fileFields = ['studentPhoto', 'transcriptPhoto', 'householdRegistration'];
-        const uploadPromises = [];
-
-        for (const field of fileFields) {
-            if (studentData[field] && studentData[field].startsWith('data:')) {
-                // Delete old file if exists
-                if (student[field] && student[field].public_id) {
-                    await cloudinary.uploader.destroy(student[field].public_id);
-                }
-
-                // Upload new file
-                uploadPromises.push(
-                    cloudinary.uploader.upload(studentData[field], {
-                        folder: `kindergarten/students/${field}s`,
-                        resource_type: 'auto',
-                        transformation: field === 'studentPhoto' ? [
-                            { width: 500, height: 500, crop: "fill", gravity: "face" },
-                            { quality: "auto" },
-                            { fetch_format: "auto" }
-                        ] : [
-                            { quality: "auto" },
-                            { fetch_format: "auto" }
-                        ]
-                    }).then(result => ({
-                        field,
-                        secure_url: result.secure_url,
-                        public_id: result.public_id
-                    }))
-                );
+    async createStudent(studentData) {
+        try {
+            const { error } = validateStudent(studentData.studentProfile, 'create');
+            if (error) {
+                throw new ErrorResponse(error.details.map(e => e.message).join(', '), 400);
             }
-        }
 
-        // Process file uploads
-        if (uploadPromises.length > 0) {
-            const uploadResults = await Promise.all(uploadPromises);
-            uploadResults.forEach(({ field, secure_url, public_id }) => {
-                studentData[field] = {
-                    url: secure_url,
-                    public_id: public_id
-                };
-            });
-        }
+            const snapshot = await db.collection('student')
+                .where('studentProfile.studentID', '==', studentData.studentProfile.studentID)
+                .get();
+            if (!snapshot.empty) {
+                throw new ErrorResponse('Student ID already exists', 400);
+            }
 
-        return await this.studentRepository.update(id, studentData);
+            const studentRef = await this.studentRepository.create(studentData);
+            return studentRef;
+        } catch (error) {
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(`Error creating student: ${error.message}`, 500);
+        }
+    }
+
+    async updateStudent(id, studentData) {
+        try {
+            const { error } = validateStudent(studentData, 'update');
+            if (error) {
+                throw new ErrorResponse(error.details.map(e => e.message).join(', '), 400);
+            }
+
+            const student = await this.studentRepository.findById(id);
+            const formattedData = toFirebaseFormat(studentData);
+
+            const fileFields = ['image', 'birthCertificate', 'householdRegistration'];
+            const uploadPromises = [];
+
+            for (const field of fileFields) {
+                if (studentData[field] && typeof studentData[field] === 'string' && studentData[field].startsWith('data:')) {
+                    const mimeMatch = studentData[field].match(/^data:(image\/[a-z]+|application\/pdf);base64,/);
+                    if (!mimeMatch) {
+                        throw new ErrorResponse(`Invalid file format for ${field}`, 400);
+                    }
+
+                    if (student.studentDocument[field]) {
+                        await cloudinary.uploader.destroy(student.studentDocument[field]);
+                    }
+
+                    uploadPromises.push(
+                        cloudinary.uploader.upload(studentData[field], {
+                            folder: `kindergarten/students/${field}`,
+                            resource_type: 'auto',
+                            transformation: field === 'image' ? [
+                                { width: 500, height: 500, crop: 'fill', gravity: 'face' },
+                                { quality: 'auto' },
+                                { fetch_format: 'auto' }
+                            ] : [
+                                { quality: 'auto' },
+                                { fetch_format: 'auto' }
+                            ]
+                        }).then(result => ({
+                            field,
+                            public_id: result.public_id
+                        }))
+                    );
+                }
+            }
+
+            if (uploadPromises.length > 0) {
+                const uploadResults = await Promise.all(uploadPromises);
+                uploadResults.forEach(({ field, public_id }) => {
+                    formattedData.studentDocument[field] = public_id;
+                });
+            }
+
+            return await this.studentRepository.update(id, formattedData);
+        } catch (error) {
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(`Error updating student: ${error.message}`, 500);
+        }
     }
 
     async deleteStudent(id) {
-        const student = await this.studentRepository.findById(id);
-        if (!student) {
-            throw new ErrorResponse('Student not found', 404);
-        }
+        try {
+            const student = await this.studentRepository.findById(id);
 
-        // Delete photos from Cloudinary
-        const documents = [student.studentPhoto, student.transcriptPhoto, student.householdRegistration];
-        for (const doc of documents) {
-            if (doc && doc.public_id) {
-                await cloudinary.uploader.destroy(doc.public_id);
+            const documents = [
+                student.studentDocument.image,
+                student.studentDocument.birthCertificate,
+                student.studentDocument.householdRegistration
+            ];
+            for (const public_id of documents) {
+                if (public_id) {
+                    await cloudinary.uploader.destroy(public_id);
+                }
             }
-        }
 
-        return await this.studentRepository.delete(id);
+            return await this.studentRepository.delete(id);
+        } catch (error) {
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(`Error deleting student: ${error.message}`, 500);
+        }
     }
 
     async importStudents(file) {
         try {
-            console.log('Starting import process...');
-            
             if (!file) {
                 throw new ErrorResponse('No file provided', 400);
             }
 
+            const allowedMimes = [
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'text/csv'
+            ];
+            if (!allowedMimes.includes(file.mimetype)) {
+                throw new ErrorResponse('Invalid file format. Please upload Excel or CSV', 400);
+            }
+
             const workbook = new ExcelJS.Workbook();
             await workbook.xlsx.load(file.buffer);
-            
             const worksheet = workbook.getWorksheet(1);
             if (!worksheet) {
                 throw new ErrorResponse('No worksheet found in the Excel file', 400);
             }
 
-            // Get header row to map column names
-            const headerRow = worksheet.getRow(1);
             const columnMap = {};
+            const headerRow = worksheet.getRow(1);
             headerRow.eachCell((cell, colNumber) => {
                 columnMap[cell.value?.toString().toLowerCase()] = colNumber;
             });
 
             const students = [];
-            let rowCount = 0;
+            const existingIds = new Set();
+
+            const snapshot = await db.collection('student').get();
+            snapshot.forEach(doc => {
+                existingIds.add(doc.data().studentProfile.studentID);
+            });
 
             worksheet.eachRow((row, rowNumber) => {
-                if (rowNumber === 1) return; // Skip header row
+                if (rowNumber === 1) return;
 
                 try {
+                    const studentID = row.getCell(columnMap['studentid'] || 1).value?.toString();
+                    if (!studentID) {
+                        throw new Error('Missing studentID');
+                    }
+                    if (existingIds.has(studentID)) {
+                        throw new Error(`Duplicate studentID: ${studentID}`);
+                    }
+
                     const student = {
                         studentProfile: {
-                            studentID: row.getCell(columnMap['studentid'] || 1).value?.toString() || '',
-                            firstName: row.getCell(columnMap['firstname'] || 2).value?.toString() || '',
-                            lastName: row.getCell(columnMap['lastname'] || 3).value?.toString() || '',
-                            name: row.getCell(columnMap['name'] || 4).value?.toString() || '',
-                            dateOfBirth: row.getCell(columnMap['dateofbirth'] || 5).value?.toString() || '',
-                            gender: row.getCell(columnMap['gender'] || 6).value?.toString() || '',
-                            gradeLevel: row.getCell(columnMap['gradelevel'] || 7).value?.toString() || '',
-                            school: row.getCell(columnMap['school'] || 8).value?.toString() || '',
-                            class: row.getCell(columnMap['class'] || 9).value?.toString() || '',
-                            educationSystem: row.getCell(columnMap['educationsystem'] || 10).value?.toString() || '',
-                            fatherFullname: row.getCell(columnMap['fathername'] || 11).value?.toString() || '',
-                            fatherOccupation: row.getCell(columnMap['fatheroccupation'] || 12).value?.toString() || '',
-                            motherFullname: row.getCell(columnMap['mothername'] || 13).value?.toString() || '',
-                            motherOccupation: row.getCell(columnMap['motheroccupation'] || 14).value?.toString() || ''
+                            studentID,
+                            name: row.getCell(columnMap['name'] || 2).value?.toString() || '',
+                            dateOfBirth: row.getCell(columnMap['dateofbirth'] || 3).value?.toString() || '',
+                            gender: row.getCell(columnMap['gender'] || 4).value?.toString() || '',
+                            gradeLevel: row.getCell(columnMap['gradelevel'] || 5).value?.toString() || '',
+                            school: row.getCell(columnMap['school'] || 6).value?.toString() || '',
+                            class: row.getCell(columnMap['class'] || 7).value?.toString() || '',
+                            educationSystem: row.getCell(columnMap['educationsystem'] || 8).value?.toString() || '',
+                            fatherFullname: row.getCell(columnMap['fatherfullname'] || 9).value?.toString() || '',
+                            fatherOccupation: row.getCell(columnMap['fatheroccupation'] || 10).value?.toString() || '',
+                            motherFullname: row.getCell(columnMap['motherfullname'] || 11).value?.toString() || '',
+                            motherOccupation: row.getCell(columnMap['motheroccupation'] || 12).value?.toString() || ''
                         },
                         studentDocument: {
-                            image: row.getCell(columnMap['image'] || 15).value?.toString() || '',
-                            birthCertificate: row.getCell(columnMap['birthcertificate'] || 16).value?.toString() || '',
-                            householdRegistration: row.getCell(columnMap['householdregistration'] || 17).value?.toString() || ''
+                            image: row.getCell(columnMap['image'] || 13).value?.toString() || '',
+                            birthCertificate: row.getCell(columnMap['birthcertificate'] || 14).value?.toString() || '',
+                            householdRegistration: row.getCell(columnMap['householdregistration'] || 15).value?.toString() || ''
                         }
                     };
 
-                    students.push(student);
-                    rowCount++;
+                    const { error } = validateStudent(student.studentProfile, 'create');
+                    if (error) {
+                        throw new Error(`Invalid data at row ${rowNumber}: ${error.details.map(e => e.message).join(', ')}`);
+                    }
+
+                    students.push(toFirebaseFormat(student));
+                    existingIds.add(studentID);
                 } catch (rowError) {
-                    console.error(`Error processing row ${rowNumber}:`, rowError);
-                    // Continue with next row instead of failing the entire import
+                    console.error(`Error processing row ${rowNumber}: ${rowError.message}`);
                 }
             });
-
-            console.log(`Processed ${rowCount} rows from Excel file`);
 
             if (students.length === 0) {
                 throw new ErrorResponse('No valid student data found in the file', 400);
             }
 
-            // Batch write to Firebase
             const batch = db.batch();
             students.forEach(student => {
                 const docRef = db.collection('student').doc();
@@ -298,40 +226,28 @@ class StudentService {
             });
 
             await batch.commit();
-            console.log(`Successfully imported ${students.length} students`);
 
             return {
                 success: true,
                 count: students.length
             };
         } catch (error) {
-            console.error('Error in importStudents:', error);
-            if (error instanceof ErrorResponse) {
-                throw error;
-            }
-            throw new ErrorResponse('Failed to import students: ' + error.message, 500);
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(`Failed to import students: ${error.message}`, 500);
         }
     }
 
     async exportStudents(format, students) {
         try {
-            console.log('Starting export process...');
-            
-            if (!Array.isArray(students)) {
-                throw new Error('No students data provided');
+            if (!Array.isArray(students) || students.length === 0) {
+                throw new ErrorResponse('No students data provided', 400);
             }
-
-            console.log(`Processing ${students.length} students for export`);
 
             if (format === 'xlsx') {
                 const workbook = new ExcelJS.Workbook();
                 const worksheet = workbook.addWorksheet('Students');
 
-                // Set up columns with proper headers
                 worksheet.columns = [
                     { header: 'Student ID', key: 'studentID', width: 15 },
-                    { header: 'First Name', key: 'firstName', width: 20 },
-                    { header: 'Last Name', key: 'lastName', width: 20 },
                     { header: 'Full Name', key: 'name', width: 30 },
                     { header: 'Date of Birth', key: 'dateOfBirth', width: 15 },
                     { header: 'Gender', key: 'gender', width: 10 },
@@ -339,21 +255,18 @@ class StudentService {
                     { header: 'School', key: 'school', width: 30 },
                     { header: 'Class', key: 'class', width: 15 },
                     { header: 'Education System', key: 'educationSystem', width: 20 },
-                    { header: 'Father\'s Name', key: 'fatherName', width: 30 },
+                    { header: 'Father\'s Name', key: 'fatherFullname', width: 30 },
                     { header: 'Father\'s Occupation', key: 'fatherOccupation', width: 30 },
-                    { header: 'Mother\'s Name', key: 'motherName', width: 30 },
+                    { header: 'Mother\'s Name', key: 'motherFullname', width: 30 },
                     { header: 'Mother\'s Occupation', key: 'motherOccupation', width: 30 },
                     { header: 'Image', key: 'image', width: 30 },
                     { header: 'Birth Certificate', key: 'birthCertificate', width: 30 },
                     { header: 'Household Registration', key: 'householdRegistration', width: 30 }
                 ];
 
-                // Add rows
                 students.forEach(student => {
                     worksheet.addRow({
                         studentID: student.studentID || '',
-                        firstName: student.firstName || '',
-                        lastName: student.lastName || '',
                         name: student.name || '',
                         dateOfBirth: student.dateOfBirth || '',
                         gender: student.gender || '',
@@ -361,17 +274,16 @@ class StudentService {
                         school: student.school || '',
                         class: student.class || '',
                         educationSystem: student.educationSystem || '',
-                        fatherName: student.fatherName || '',
+                        fatherFullname: student.fatherFullname || '',
                         fatherOccupation: student.fatherOccupation || '',
-                        motherName: student.motherName || '',
+                        motherFullname: student.motherFullname || '',
                         motherOccupation: student.motherOccupation || '',
-                        image: student.image || '',
-                        birthCertificate: student.birthCertificate || '',
-                        householdRegistration: student.householdRegistration || ''
+                        image: student.studentDocument?.image || '',
+                        birthCertificate: student.studentDocument?.birthCertificate || '',
+                        householdRegistration: student.studentDocument?.householdRegistration || ''
                     });
                 });
 
-                // Style the header row
                 worksheet.getRow(1).font = { bold: true };
                 worksheet.getRow(1).fill = {
                     type: 'pattern',
@@ -379,49 +291,33 @@ class StudentService {
                     fgColor: { argb: 'FFE0E0E0' }
                 };
 
-                // Generate buffer
                 const buffer = await workbook.xlsx.writeBuffer();
                 return buffer;
             } else if (format === 'json') {
                 return JSON.stringify(students, null, 2);
             } else {
-                throw new Error('Invalid export format');
+                throw new ErrorResponse('Invalid export format', 400);
             }
         } catch (error) {
-            console.error('Error in exportStudents service:', error);
-            throw error;
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(`Failed to export students: ${error.message}`, 500);
         }
     }
 
-    async getStudentsByClass(className) {
+    async getStudentsByClass(classId) {
         try {
-            const studentsRef = db.collection('student');
-            const snapshot = await studentsRef
-                .where('studentProfile.class', '==', className)
-                .get();
-            return snapshot.docs.map(doc => this._convertToClientFormat(doc));
+            return await this.studentRepository.findByClass(classId);
         } catch (error) {
-            throw error;
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(`Error retrieving students by class: ${error.message}`, 500);
         }
     }
 
     async searchStudents(searchTerm) {
         try {
-            const students = await this.getAllStudents();
-            const searchTermLower = searchTerm.toLowerCase();
-
-            return students.filter(student =>
-                student.firstName.toLowerCase().includes(searchTermLower) ||
-                student.lastName.toLowerCase().includes(searchTermLower) ||
-                student.parentName.toLowerCase().includes(searchTermLower) ||
-                student.class.toLowerCase().includes(searchTermLower) ||
-                student.studentID.toLowerCase().includes(searchTermLower) ||
-                student.school.toLowerCase().includes(searchTermLower)
-            );
+            return await this.studentRepository.search(searchTerm);
         } catch (error) {
-            throw error;
+            throw error instanceof ErrorResponse ? error : new ErrorResponse(`Error searching students: ${error.message}`, 500);
         }
     }
 }
 
-module.exports = { StudentService }; 
+module.exports = { StudentService };

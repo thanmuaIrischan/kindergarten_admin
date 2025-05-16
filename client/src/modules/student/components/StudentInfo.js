@@ -46,9 +46,9 @@ const StudentInfo = ({ student }) => {
             {/* Parent Information Section */}
             <Box sx={sx.section}>
                 <SectionTitle title="Parent Information" sx={sx} />
-                <DetailRow label="Father's Name" value={student.parentName} sx={sx} />
+                <DetailRow label="Father's Name" value={student.fatherFullName || 'N/A'} sx={sx} />
                 <DetailRow label="Father's Occupation" value={student.fatherOccupation} sx={sx} />
-                <DetailRow label="Mother's Name" value={student.motherName} sx={sx} />
+                <DetailRow label="Mother's Name" value={student.motherName || 'N/A'} sx={sx} />
                 <DetailRow label="Mother's Occupation" value={student.motherOccupation} sx={sx} />
             </Box>
         </Stack>

@@ -31,20 +31,86 @@ const AddStudent = ({ onBack }) => {
         setIsLoading(true);
         setError('');
         try {
+            console.log('Raw form data:', formData); // Debug log for raw data
+
+            // Deep clone and sanitize the data to remove any undefined values
+            const sanitizedFormData = JSON.parse(JSON.stringify({
+                studentProfile: {
+                    studentID: formData.studentID?.trim() || '',
+                    name: formData.name?.trim() || '',
+                    dateOfBirth: formData.dateOfBirth || '',
+                    gender: formData.gender?.trim() || '',
+                    fatherFullname: formData.fatherFullname?.trim() || '',
+                    fatherOccupation: formData.fatherOccupation?.trim() || '',
+                    motherFullname: formData.motherFullname?.trim() || '',
+                    motherOccupation: formData.motherOccupation?.trim() || '',
+                    gradeLevel: formData.gradeLevel ? parseInt(formData.gradeLevel) : 0,
+                    school: formData.school?.trim() || '',
+                    class: formData.class?.trim() || '',
+                    educationSystem: formData.educationSystem?.trim() || ''
+                },
+                studentDocument: {
+                    image: formData.studentDocument?.image?.public_id || '',
+                    birthCertificate: formData.studentDocument?.birthCertificate?.public_id || '',
+                    householdRegistration: formData.studentDocument?.householdRegistration?.public_id || ''
+                }
+            }));
+
+            console.log('Sanitized form data structure:', {
+                hasStudentProfile: !!sanitizedFormData.studentProfile,
+                studentProfileFields: sanitizedFormData.studentProfile ? Object.keys(sanitizedFormData.studentProfile) : [],
+                studentProfileValues: sanitizedFormData.studentProfile || {},
+                documentFields: sanitizedFormData.studentDocument ? Object.keys(sanitizedFormData.studentDocument) : [],
+            }); // Debug log
+
+            // Validate required fields
+            const requiredFields = [
+                'studentID',
+                'name',
+                'dateOfBirth',
+                'gender',
+                'gradeLevel',
+                'class'
+            ];
+
+            console.log('Checking required fields:', {
+                requiredFields,
+                presentFields: requiredFields.map(field => ({
+                    field,
+                    value: sanitizedFormData.studentProfile[field],
+                    exists: !!sanitizedFormData.studentProfile[field]
+                }))
+            }); // Debug log
+
+            const missingFields = requiredFields.filter(
+                field => !sanitizedFormData.studentProfile[field]
+            );
+
+            if (missingFields.length > 0) {
+                console.log('Missing fields detected:', {
+                    missingFields,
+                    formValues: sanitizedFormData.studentProfile
+                }); // Debug log
+                throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+            }
+
+            console.log('All required fields present, sending to server:', sanitizedFormData); // Debug log
+
             const response = await fetch(`${API_URL}/student`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(sanitizedFormData),
             });
 
+            const data = await response.json();
+            console.log('Server response:', data); // Debug log
+
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to create student');
+                throw new Error(data.error || 'Failed to create student');
             }
 
-            const data = await response.json();
             if (data.success) {
                 onBack();
             } else {

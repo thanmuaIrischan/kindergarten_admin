@@ -23,8 +23,6 @@ const StudentForm = ({ onSubmit, isLoading, initialData, activeStep, onBack }) =
     const theme = useTheme();
     const [formData, setFormData] = useState({
         studentID: initialData?.studentID || '',
-        firstName: initialData?.firstName || '',
-        lastName: initialData?.lastName || '',
         name: initialData?.name || '',
         dateOfBirth: initialData?.dateOfBirth ? new Date(initialData.dateOfBirth) : null,
         gender: initialData?.gender || '',
@@ -32,13 +30,15 @@ const StudentForm = ({ onSubmit, isLoading, initialData, activeStep, onBack }) =
         school: initialData?.school || '',
         class: initialData?.class || '',
         educationSystem: initialData?.educationSystem || '',
-        fatherName: initialData?.fatherName || '',
+        fatherFullname: initialData?.fatherFullname || '',
         fatherOccupation: initialData?.fatherOccupation || '',
-        motherName: initialData?.motherName || '',
+        motherFullname: initialData?.motherFullname || '',
         motherOccupation: initialData?.motherOccupation || '',
-        image: initialData?.image || null,
-        birthCertificate: initialData?.birthCertificate || null,
-        householdRegistration: initialData?.householdRegistration || null
+        studentDocument: {
+            image: initialData?.studentDocument?.image || null,
+            birthCertificate: initialData?.studentDocument?.birthCertificate || null,
+            householdRegistration: initialData?.studentDocument?.householdRegistration || null
+        }
     });
 
     const [errors, setErrors] = useState({});
@@ -199,32 +199,106 @@ const StudentForm = ({ onSubmit, isLoading, initialData, activeStep, onBack }) =
     }, []);
 
     const handleDateChange = useCallback((newValue) => {
-        setFormData(prev => ({
-            ...prev,
-            dateOfBirth: newValue
-        }));
+        // Validate if the date is valid before setting it
+        if (newValue instanceof Date && !isNaN(newValue)) {
+            // Check if the date is not in the future
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Reset time part for accurate date comparison
+            
+            if (newValue > today) {
+                setErrors(prev => ({
+                    ...prev,
+                    dateOfBirth: 'Date of birth cannot be in the future'
+                }));
+                return;
+            }
+
+            try {
+                // Format the date to ensure it's in dd-MM-yyyy format
+                const formattedDate = format(newValue, 'dd-MM-yyyy');
+                // Parse back to verify format is valid
+                const [day, month, year] = formattedDate.split('-').map(Number);
+                const parsedDate = new Date(year, month - 1, day);
+                
+                if (isNaN(parsedDate.getTime()) || parsedDate > today) {
+                    throw new Error('Invalid date');
+                }
+
+                setFormData(prev => ({
+                    ...prev,
+                    dateOfBirth: newValue
+                }));
+                setErrors(prev => ({
+                    ...prev,
+                    dateOfBirth: ''
+                }));
+            } catch (error) {
+                setErrors(prev => ({
+                    ...prev,
+                    dateOfBirth: 'Please enter a valid date in DD-MM-YYYY format'
+                }));
+            }
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                dateOfBirth: null
+            }));
+            setErrors(prev => ({
+                ...prev,
+                dateOfBirth: 'Please enter a valid date in DD-MM-YYYY format'
+            }));
+        }
     }, []);
 
-    const handleFileChange = useCallback(async (e) => {
+    const handleFileChange = useCallback((e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        
+        // Handle nested object updates for studentDocument
+        if (name.startsWith('studentDocument.')) {
+            const field = name.split('.')[1];
+            setFormData(prev => ({
+                ...prev,
+                studentDocument: {
+                    ...prev.studentDocument,
+                    [field]: value
+                }
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
     }, []);
 
     const handleSubmit = useCallback((e) => {
         e.preventDefault();
         
+        // Debug log - Initial form data
+        console.log('Initial form data:', formData);
+
         // Validate all fields
         const newErrors = {};
         let hasErrors = false;
 
         // Helper function to validate a field
         const validateField = (name, value) => {
-            const errorMessage = validateInput(name, value);
-            if (errorMessage) {
-                newErrors[name] = errorMessage;
+            console.log(`Validating ${name}:`, value); // Debug log
+            if (name === 'studentID') {
+                if (!value || value.trim() === '') {
+                    newErrors[name] = 'Student ID is required';
+                    hasErrors = true;
+                    return;
+                }
+                if (!/^[A-Z0-9]{6,10}$/.test(value)) {
+                    newErrors[name] = 'Student ID must be 6-10 alphanumeric characters';
+                    hasErrors = true;
+                }
+                return;
+            }
+
+            if (!value || value.trim() === '') {
+                newErrors[name] = `${formatFieldName(name)} is required`;
                 hasErrors = true;
             }
         };
@@ -233,8 +307,6 @@ const StudentForm = ({ onSubmit, isLoading, initialData, activeStep, onBack }) =
         switch (activeStep) {
             case 0: // Basic Information
                 validateField('studentID', formData.studentID);
-                validateField('firstName', formData.firstName);
-                validateField('lastName', formData.lastName);
                 validateField('name', formData.name);
                 if (!formData.dateOfBirth) {
                     newErrors.dateOfBirth = 'Date of birth is required';
@@ -248,31 +320,38 @@ const StudentForm = ({ onSubmit, isLoading, initialData, activeStep, onBack }) =
                 validateField('school', formData.school);
                 validateField('class', formData.class);
                 validateField('educationSystem', formData.educationSystem);
-                validateField('fatherName', formData.fatherName);
+                validateField('fatherFullname', formData.fatherFullname);
                 validateField('fatherOccupation', formData.fatherOccupation);
-                validateField('motherName', formData.motherName);
+                validateField('motherFullname', formData.motherFullname);
                 validateField('motherOccupation', formData.motherOccupation);
                 break;
             
             case 2: // Documents
-                if (!formData.image) {
-                    newErrors.image = 'Student photo is required';
+                if (!formData.studentDocument.image) {
+                    newErrors.studentDocument = {
+                        ...newErrors.studentDocument,
+                        image: 'Student photo is required'
+                    };
                     hasErrors = true;
                 }
-                if (!formData.birthCertificate) {
-                    newErrors.birthCertificate = 'Birth certificate is required';
+                if (!formData.studentDocument.birthCertificate) {
+                    newErrors.studentDocument = {
+                        ...newErrors.studentDocument,
+                        birthCertificate: 'Birth certificate is required'
+                    };
                     hasErrors = true;
                 }
-                if (!formData.householdRegistration) {
-                    newErrors.householdRegistration = 'Household registration is required';
+                if (!formData.studentDocument.householdRegistration) {
+                    newErrors.studentDocument = {
+                        ...newErrors.studentDocument,
+                        householdRegistration: 'Household registration is required'
+                    };
                     hasErrors = true;
                 }
                 break;
             
             case 3: // Review - Validate all fields
                 validateField('studentID', formData.studentID);
-                validateField('firstName', formData.firstName);
-                validateField('lastName', formData.lastName);
                 validateField('name', formData.name);
                 if (!formData.dateOfBirth) {
                     newErrors.dateOfBirth = 'Date of birth is required';
@@ -283,54 +362,126 @@ const StudentForm = ({ onSubmit, isLoading, initialData, activeStep, onBack }) =
                 validateField('school', formData.school);
                 validateField('class', formData.class);
                 validateField('educationSystem', formData.educationSystem);
-                validateField('fatherName', formData.fatherName);
+                validateField('fatherFullname', formData.fatherFullname);
                 validateField('fatherOccupation', formData.fatherOccupation);
-                validateField('motherName', formData.motherName);
+                validateField('motherFullname', formData.motherFullname);
                 validateField('motherOccupation', formData.motherOccupation);
-                if (!formData.image) {
-                    newErrors.image = 'Student photo is required';
+                if (!formData.studentDocument.image) {
+                    newErrors.studentDocument.image = 'Student photo is required';
                     hasErrors = true;
                 }
-                if (!formData.birthCertificate) {
-                    newErrors.birthCertificate = 'Birth certificate is required';
+                if (!formData.studentDocument.birthCertificate) {
+                    newErrors.studentDocument.birthCertificate = 'Birth certificate is required';
                     hasErrors = true;
                 }
-                if (!formData.householdRegistration) {
-                    newErrors.householdRegistration = 'Household registration is required';
+                if (!formData.studentDocument.householdRegistration) {
+                    newErrors.studentDocument.householdRegistration = 'Household registration is required';
                     hasErrors = true;
                 }
                 break;
         }
 
         if (hasErrors) {
+            console.log('Validation errors:', newErrors); // Debug log
             setErrors(newErrors);
             return;
         }
 
-        // Trim all string values before submitting
+        // Ensure studentID is not empty before submitting
+        if (!formData.studentID || formData.studentID.trim() === '') {
+            console.log('StudentID empty check failed:', formData.studentID); // Debug log
+            setErrors(prev => ({
+                ...prev,
+                studentID: 'Student ID is required'
+            }));
+            return;
+        }
+
+        // Format the date properly before submitting
+        const formattedDate = formData.dateOfBirth instanceof Date && !isNaN(formData.dateOfBirth)
+            ? format(formData.dateOfBirth, 'dd-MM-yyyy')
+            : '';
+
+        // Trim all string values and ensure required fields are present
         const submitData = {
-            ...formData,
-            studentID: formData.studentID.trim(),
-            firstName: formData.firstName.trim(),
-            lastName: formData.lastName.trim(),
-            name: formData.name.trim(),
-            gradeLevel: formData.gradeLevel.trim(),
-            school: formData.school.trim(),
-            class: formData.class.trim(),
-            educationSystem: formData.educationSystem.trim(),
-            fatherName: formData.fatherName.trim(),
-            fatherOccupation: formData.fatherOccupation.trim(),
-            motherName: formData.motherName.trim(),
-            motherOccupation: formData.motherOccupation.trim(),
-            dateOfBirth: formData.dateOfBirth instanceof Date
-                ? format(formData.dateOfBirth, 'dd-MM-yyyy')
-                : formData.dateOfBirth
+            studentProfile: {
+                studentID: formData.studentID.trim(),
+                name: formData.name.trim(),
+                dateOfBirth: formattedDate,
+                gender: formData.gender,
+                gradeLevel: formData.gradeLevel.trim(),
+                school: formData.school.trim(),
+                class: formData.class.trim(),
+                educationSystem: formData.educationSystem.trim(),
+                fatherFullname: formData.fatherFullname.trim(),
+                fatherOccupation: formData.fatherOccupation.trim(),
+                motherFullname: formData.motherFullname.trim(),
+                motherOccupation: formData.motherOccupation.trim()
+            },
+            studentDocument: {
+                image: formData.studentDocument.image?.public_id || '',
+                birthCertificate: formData.studentDocument.birthCertificate?.public_id || '',
+                householdRegistration: formData.studentDocument.householdRegistration?.public_id || ''
+            }
         };
 
+        console.log('StudentForm - Form data before validation:', {
+            originalData: formData,
+            processedData: submitData,
+            dateOfBirth: {
+                original: formData.dateOfBirth,
+                formatted: formattedDate
+            }
+        });
+
+        // Validate date of birth is not in the future
+        const dobDate = new Date(submitData.studentProfile.dateOfBirth.split('-').reverse().join('-'));
+        if (dobDate > new Date()) {
+            console.log('Date validation failed:', {
+                inputDate: submitData.studentProfile.dateOfBirth,
+                parsedDate: dobDate,
+                currentDate: new Date()
+            });
+            setErrors(prev => ({
+                ...prev,
+                dateOfBirth: 'Date of birth cannot be in the future'
+            }));
+            return;
+        }
+
+        // Final validation and debug log before submission
+        console.log('StudentForm - Final validation check:', {
+            studentID: {
+                value: submitData.studentProfile.studentID,
+                isValid: !!submitData.studentProfile.studentID
+            },
+            requiredFields: {
+                studentID: !!submitData.studentProfile.studentID,
+                name: !!submitData.studentProfile.name,
+                dateOfBirth: !!submitData.studentProfile.dateOfBirth,
+                gender: !!submitData.studentProfile.gender,
+                gradeLevel: !!submitData.studentProfile.gradeLevel,
+                class: !!submitData.studentProfile.class
+            }
+        });
+
+        if (!submitData.studentProfile.studentID) {
+            console.log('Final studentID check failed:', {
+                studentID: submitData.studentProfile.studentID,
+                formDataStudentID: formData.studentID
+            });
+            setErrors(prev => ({
+                ...prev,
+                studentID: 'Student ID is required'
+            }));
+            return;
+        }
+
         // Call onSubmit and show success notification
+        console.log('StudentForm - Calling onSubmit with data:', submitData);
         onSubmit(submitData);
         setShowSuccess(true);
-    }, [formData, onSubmit, activeStep, validateInput]);
+    }, [formData, onSubmit, activeStep, formatFieldName]);
 
     const handleCloseSuccess = useCallback(() => {
         setShowSuccess(false);

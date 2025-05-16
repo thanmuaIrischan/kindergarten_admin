@@ -31,6 +31,16 @@ const EditEducationInfoSection = ({ formData, handleChange, errors }) => {
             </Typography>
             <Grid container spacing={3}>
                 <Grid item xs={12} sm={6}>
+                    <InputField
+                        label="Grade Level"
+                        name="gradeLevel"
+                        value={formData.gradeLevel || ''}
+                        onChange={handleChange}
+                        error={errors.gradeLevel}
+                        required
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
                     <FormControl fullWidth error={!!errors.class}>
                         <InputLabel>Class</InputLabel>
                         <Select
@@ -63,7 +73,7 @@ const EditEducationInfoSection = ({ formData, handleChange, errors }) => {
                         }}
                     />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid item xs={12} sm={6}>
                     <InputField
                         label="Previous School"
                         name="previousSchool"

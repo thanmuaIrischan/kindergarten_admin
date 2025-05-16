@@ -7,22 +7,29 @@
     flex-direction: column;
     transition: all 0.3s ease;
     height: 100vh;
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
     z-index: 1000;
+    overflow-y: auto;
 }
 
 .sidebar.collapsed {
-    width: 80px;
-    min-width: 80px;
+    width: 100px;
+    min-width: 100px;
 }
 
 .sidebar-top {
-    padding: 1rem;
+    height: 90px;
+    padding: 0 1rem;
     display: flex;
     align-items: center;
     gap: 0.75rem;
     border-bottom: 1px solid var(--border-color, #e0e0e0);
     background: var(--container-bg, #fff);
+    position: sticky;
+    top: 0;
+    z-index: 2;
 }
 
 .sidebar-logo {
@@ -33,12 +40,28 @@
     overflow: hidden;
     text-overflow: ellipsis;
     flex: 1;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding-left: 0.5rem;
+}
+
+.kindergarten-text {
+    color: var(--primary-color, #4a90e2);
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.admin-text {
+    color: var(--text-light, #666);
+    font-size: 1rem;
+    font-weight: 500;
+    opacity: 0.9;
 }
 
 .sidebar-nav {
     flex: 1;
     padding: 1rem 0;
-    overflow-y: auto;
     background: var(--container-bg, #fff);
 }
 
@@ -61,6 +84,7 @@
 .sidebar.collapsed .sidebar-item {
     justify-content: center;
     padding: 1rem;
+    width: 85px;
 }
 
 .sidebar.collapsed .sidebar-item svg {
@@ -95,12 +119,22 @@
 }
 
 .sidebar-user {
+    position: sticky;
+    bottom: 0;
+    width: 100%;
     padding: 1rem;
     border-top: 1px solid var(--border-color, #e0e0e0);
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
     background: var(--container-bg, #fff);
+    z-index: 2;
+}
+
+.sidebar.collapsed .sidebar-user {
+    width: 85px;
+    min-width: 85px;
+    padding: 0.5rem;
 }
 
 .sidebar-logout,
@@ -118,18 +152,24 @@
     transition: all 0.2s ease;
     width: 100%;
     border-radius: 6px;
+    justify-content: flex-start;
+    box-sizing: border-box;
 }
 
 .sidebar.collapsed .sidebar-logout,
 .sidebar.collapsed .sidebar-hide-btn,
 .sidebar.collapsed .sidebar-collapse-btn {
     justify-content: center;
+    padding: 1rem;
+    width: 85px;
+    min-width: 85px;
 }
 
 .sidebar.collapsed .sidebar-logout svg,
 .sidebar.collapsed .sidebar-hide-btn svg,
 .sidebar.collapsed .sidebar-collapse-btn svg {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
+    margin: 0;
 }
 
 .sidebar-logout:hover,
@@ -153,7 +193,6 @@
 }
 
 .sidebar-collapse-btn {
-    padding: 0.5rem;
     width: 32px;
     height: 32px;
     display: flex;
@@ -161,6 +200,11 @@
     justify-content: center;
     border-radius: 6px;
     flex-shrink: 0;
+    background: none;
+    border: none;
+    color: var(--text-light, #666);
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .sidebar.collapsed .sidebar-logo {
@@ -190,6 +234,12 @@
     --hover-bg: rgba(96, 165, 250, 0.15);
     --active-bg: rgba(96, 165, 250, 0.2);
     --primary-color: #60a5fa;
+    background: var(--container-bg);
+}
+
+.dark .sidebar-top {
+    background: var(--container-bg);
+    border-color: var(--border-color);
 }
 
 .dark .sidebar-show-btn {
@@ -228,4 +278,14 @@
 .dark .sidebar-show-btn:hover {
     color: #60a5fa;
     background-color: rgba(96, 165, 250, 0.15);
+}
+
+/* Adjust main content margin */
+.main-content {
+    margin-left: 280px;
+    transition: margin-left 0.3s ease;
+}
+
+.main-content.collapsed {
+    margin-left: 100px;
 }

@@ -62,18 +62,6 @@ const EditBasicInfoSection = ({ formData, handleChange, errors }) => {
                         <option value="other">Other</option>
                     </InputField>
                 </Grid>
-                <Grid item xs={12}>
-                    <InputField
-                        label="Address"
-                        name="address"
-                        value={formData.address}
-                        onChange={handleChange}
-                        error={errors.address}
-                        required
-                        multiline
-                        rows={3}
-                    />
-                </Grid>
             </Grid>
         </Box>
     );

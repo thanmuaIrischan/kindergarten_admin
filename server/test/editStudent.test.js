@@ -12,8 +12,6 @@ const testStudent = {
     school: "Test School",
     class: "Class A",
     educationSystem: "International",
-    parentName: "John Doe Sr",
-    parentEmail: "parent@test.com",
     motherName: "Jane Doe",
     fatherOccupation: "Engineer",
     motherOccupation: "Doctor",

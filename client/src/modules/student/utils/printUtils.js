@@ -146,9 +146,9 @@ export const generatePrintContent = (students) => {
                                 <td>${student.school || ''}</td>
                                 <td>${student.class || ''}</td>
                                 <td>${student.educationSystem || ''}</td>
-                                <td>${student.fatherName || ''}</td>
+                                <td>${student.fatherFullName || ''}</td>
                                 <td>${student.fatherOccupation || ''}</td>
-                                <td>${student.motherName || ''}</td>
+                                <td>${student.motherFullName || ''}</td>
                                 <td>${student.motherOccupation || ''}</td>
                                 <td>${student.image || ''}</td>
                                 <td>${student.birthCertificate || ''}</td>
@@ -194,9 +194,9 @@ export const mapStudentsForPrint = (filteredStudents) => {
                     gradeLevel: student.gradeLevel || '',
                     school: student.school || '',
                     educationSystem: student.educationSystem || '',
-                    fatherName: student.parentName || student.fatherFullname || '',
+                    fatherName: student.fatherFullName || '',
                     fatherOccupation: student.fatherOccupation || '',
-                    motherName: student.motherName || student.motherFullname || '',
+                    motherName: student.motherName || '',
                     motherOccupation: student.motherOccupation || '',
                     class: student.class || '',
                     image: student.studentDocument?.image || '',

@@ -7,14 +7,14 @@ const ParentInfoSection = ({ formData, errors, handleInputChange, handleBlur }) 
         <FormSection title="Parent Information">
             <InputField
                 required
-                name="fatherName"
+                name="fatherFullname"
                 label="Father's Name"
-                value={formData.fatherName}
+                value={formData.fatherFullname}
                 onChange={handleInputChange}
                 onBlur={handleBlur}
                 inputProps={{ autoComplete: 'off' }}
-                error={!!errors.fatherName}
-                helperText={errors.fatherName}
+                error={!!errors.fatherFullname}
+                helperText={errors.fatherFullname}
             />
             <InputField
                 required
@@ -29,14 +29,14 @@ const ParentInfoSection = ({ formData, errors, handleInputChange, handleBlur }) 
             />
             <InputField
                 required
-                name="motherName"
+                name="motherFullname"
                 label="Mother's Name"
-                value={formData.motherName}
+                value={formData.motherFullname}
                 onChange={handleInputChange}
                 onBlur={handleBlur}
                 inputProps={{ autoComplete: 'off' }}
-                error={!!errors.motherName}
-                helperText={errors.motherName}
+                error={!!errors.motherFullname}
+                helperText={errors.motherFullname}
             />
             <InputField
                 required
