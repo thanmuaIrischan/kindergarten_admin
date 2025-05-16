@@ -1,108 +1,155 @@
 const Joi = require('joi');
 
-const studentSchema = Joi.object({
-    firstName: Joi.string()
+const baseStudentSchema = Joi.object({
+    studentID: Joi.string()
         .required()
         .trim()
-        .max(50)
         .messages({
-            'string.empty': 'First name is required',
-            'string.max': 'First name cannot be more than 50 characters'
+            'string.empty': 'Student ID is required',
+            'any.required': 'Student ID is required'
         }),
 
-    lastName: Joi.string()
-        .required()
-        .trim()
-        .max(50)
-        .messages({
-            'string.empty': 'Last name is required',
-            'string.max': 'Last name cannot be more than 50 characters'
-        }),
-
-    dateOfBirth: Joi.date()
-        .required()
-        .messages({
-            'date.base': 'Please provide a valid date of birth',
-            'any.required': 'Date of birth is required'
-        }),
-
-    gender: Joi.string()
-        .required()
-        .valid('male', 'female', 'other')
-        .messages({
-            'any.only': 'Gender must be either male, female, or other',
-            'any.required': 'Gender is required'
-        }),
-
-    parentName: Joi.string()
+    name: Joi.string()
         .required()
         .trim()
         .max(100)
         .messages({
-            'string.empty': 'Parent name is required',
-            'string.max': 'Parent name cannot be more than 100 characters'
+            'string.empty': 'Full name is required',
+            'string.max': 'Full name cannot be more than 100 characters'
         }),
 
-    parentContact: Joi.string()
+    dateOfBirth: Joi.string()
+        .required()
+        .pattern(/^\d{1,2}-\d{1,2}-\d{4}$/)
+        .custom((value, helpers) => {
+            const [day, month, year] = value.split('-').map(Number);
+            const date = new Date(year, month - 1, day);
+            if (date > new Date()) {
+                return helpers.error('date.future');
+            }
+            if (isNaN(date.getTime()) || date.getFullYear() !== year) {
+                return helpers.error('date.invalid');
+            }
+            return value;
+        })
+        .messages({
+            'string.empty': 'Date of birth is required',
+            'string.pattern.base': 'Date of birth must be in format DD-MM-YYYY',
+            'date.future': 'Date of birth cannot be in the future',
+            'date.invalid': 'Invalid date of birth'
+        }),
+
+    gender: Joi.string()
+        .required()
+        .valid('Male', 'Female', 'Other')
+        .messages({
+            'any.only': 'Gender must be Male, Female, or Other',
+            'any.required': 'Gender is required'
+        }),
+
+    fatherFullname: Joi.string()
+        .required()
+        .trim()
+        .max(100)
+        .messages({
+            'string.empty': "Father's name is required",
+            'string.max': "Father's name cannot be more than 100 characters"
+        }),
+
+    fatherOccupation: Joi.string()
+        .required()
+        .trim()
+        .max(100)
+        .messages({
+            'string.empty': "Father's occupation is required",
+            'string.max': "Father's occupation cannot be more than 100 characters"
+        }),
+
+    motherFullname: Joi.string()
+        .required()
+        .trim()
+        .max(100)
+        .messages({
+            'string.empty': "Mother's name is required",
+            'string.max': "Mother's name cannot be more than 100 characters"
+        }),
+
+    motherOccupation: Joi.string()
+        .required()
+        .trim()
+        .max(100)
+        .messages({
+            'string.empty': "Mother's occupation is required",
+            'string.max': "Mother's occupation cannot be more than 100 characters"
+        }),
+
+    gradeLevel: Joi.number()
+        .required()
+        .min(1)
+        .messages({
+            'number.base': 'Grade level must be a number',
+            'number.min': 'Grade level must be at least 1',
+            'any.required': 'Grade level is required'
+        }),
+
+    school: Joi.string()
         .required()
         .trim()
         .messages({
-            'string.empty': 'Parent contact number is required'
+            'string.empty': 'School is required'
         }),
-
-    parentEmail: Joi.string()
-        .email()
-        .trim()
-        .lowercase()
-        .allow('')
-        .messages({
-            'string.email': 'Please provide a valid email address'
-        }),
-
-    address: Joi.string()
-        .required()
-        .trim()
-        .messages({
-            'string.empty': 'Address is required'
-        }),
-
-    enrollmentDate: Joi.date()
-        .default(Date.now),
 
     class: Joi.string()
+        .required()
         .trim()
-        .allow(''),
+        .messages({
+            'string.empty': 'Class is required'
+        }),
 
-    medicalConditions: Joi.array()
-        .items(Joi.string().trim())
-        .default([]),
+    educationSystem: Joi.string()
+        .required()
+        .trim()
+        .messages({
+            'string.empty': 'Education system is required'
+        }),
 
-    emergencyContact: Joi.object({
-        name: Joi.string().trim().allow(''),
-        relationship: Joi.string().trim().allow(''),
-        phone: Joi.string().trim().allow('')
-    }).default({}),
+    image: Joi.string()
+        .allow('')
+        .messages({
+            'string.base': 'Image must be a valid public_id'
+        }),
 
-    studentPhoto: Joi.object({
-        url: Joi.string().allow(''),
-        public_id: Joi.string().allow('')
-    }).allow(null),
+    birthCertificate: Joi.string()
+        .allow('')
+        .messages({
+            'string.base': 'Birth certificate must be a valid public_id'
+        }),
 
-    transcriptPhoto: Joi.object({
-        url: Joi.string().allow(''),
-        public_id: Joi.string().allow('')
-    }).allow(null),
-
-    householdRegistration: Joi.object({
-        url: Joi.string().allow(''),
-        public_id: Joi.string().allow('')
-    }).allow(null)
+    householdRegistration: Joi.string()
+        .allow('')
+        .messages({
+            'string.base': 'Household registration must be a valid public_id'
+        })
 });
 
-const validateStudent = (data) => {
-    return studentSchema.validate(data, { abortEarly: false });
+// Schema cho tạo học sinh
+const createStudentSchema = baseStudentSchema;
+
+// Schema cho cập nhật học sinh
+const updateStudentSchema = baseStudentSchema.fork(
+    [
+        'name', 'dateOfBirth', 'gender', 'fatherFullname', 'fatherOccupation',
+        'motherFullname', 'motherOccupation', 'gradeLevel', 'school', 'class',
+        'educationSystem'
+    ],
+    (schema) => schema.optional()
+);
+
+const validateStudent = (data, operation = 'create') => {
+    const schema = operation === 'create' ? createStudentSchema : updateStudentSchema;
+    return schema.validate(data, { abortEarly: false });
 };
 
 module.exports = {
     validateStudent
-}; 
+};

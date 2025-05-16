@@ -12,14 +12,15 @@ const excelUpload = multer({
         fileSize: 10 * 1024 * 1024, // 10MB limit
     },
     fileFilter: (req, file, cb) => {
-        // Accept Excel files
-        if (file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-            file.mimetype === 'application/vnd.ms-excel') {
+        if (
+            file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+            file.mimetype === 'application/vnd.ms-excel'
+        ) {
             cb(null, true);
         } else {
             cb(new Error('Only Excel files are allowed!'), false);
         }
-    }
+    },
 });
 
 // Configure multer for document uploads
@@ -29,23 +30,22 @@ const documentUpload = multer({
         fileSize: 5 * 1024 * 1024, // 5MB limit
     },
     fileFilter: (req, file, cb) => {
-        // Accept images and PDFs
         if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
             cb(null, true);
         } else {
             cb(new Error('Only images and PDFs are allowed!'), false);
         }
-    }
+    },
 });
 
-// Export routes - must be before other routes
+// Export routes
 router.get('/export/:format', studentController.exportStudents);
 router.post('/export/:format', studentController.exportStudents);
 
 // Import route
 router.post('/import', excelUpload.single('file'), studentController.importStudents);
 
-// File upload routes - must be before /:id routes
+// File upload routes
 router.post('/upload', documentUpload.single('file'), studentController.uploadFile);
 router.post('/document/upload', documentUpload.single('file'), studentController.uploadStudentDocument);
 
@@ -53,7 +53,7 @@ router.post('/document/upload', documentUpload.single('file'), studentController
 router.get('/image/:public_id', studentController.getImageDetails);
 router.get('/image/optimize', studentController.getOptimizedImageUrl);
 
-// Check student ID route - must be before /:id routes
+// Check student ID route
 router.get('/check-id/:id', studentController.checkStudentId);
 
 // Search students
@@ -87,7 +87,7 @@ router.get('/test-connection', async (req, res) => {
         const snapshot = await studentRef.get();
         console.log('Snapshot retrieved:', {
             empty: snapshot.empty,
-            size: snapshot.size
+            size: snapshot.size,
         });
 
         const students = [];
@@ -96,7 +96,7 @@ router.get('/test-connection', async (req, res) => {
             console.log('Data:', doc.data());
             students.push({
                 id: doc.id,
-                ...doc.data()
+                ...doc.data(),
             });
         });
 
@@ -104,14 +104,14 @@ router.get('/test-connection', async (req, res) => {
             success: true,
             message: 'Firebase connection successful',
             count: snapshot.size,
-            students: students
+            students: students,
         });
     } catch (error) {
         console.error('Firebase connection test error:', error);
         res.status(500).json({
             success: false,
             error: error.message,
-            stack: error.stack
+            stack: error.stack,
         });
     }
 });
@@ -133,13 +133,13 @@ router.post('/test', async (req, res) => {
                 educationSystem: 'Chuẩn',
                 fatherOccupation: 'Giáo viên',
                 motherOccupation: 'Bác sĩ',
-                parentContact: '0123456789'
+                parentContact: '0123456789',
             },
             studentDocument: {
                 image: 'default_student_image',
                 birthCertificate: 'linkanhgiaykhaisinh',
-                householdRegistration: 'linkanhsohokhau'
-            }
+                householdRegistration: 'linkanhsohokhau',
+            },
         };
 
         const docRef = await db.collection('student').add(testStudent);
@@ -150,4 +150,4 @@ router.post('/test', async (req, res) => {
     }
 });
 
-module.exports = router; 
+module.exports = router;

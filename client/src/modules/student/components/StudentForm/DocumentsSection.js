@@ -14,27 +14,27 @@ const DocumentsSection = ({ formData, errors, handleFileChange, uploadError }) =
                 )}
                 <DocumentUpload
                     title="Student Photo"
-                    name="image"
-                    value={formData.image}
+                    name="studentDocument.image"
+                    value={formData.studentDocument?.image}
                     onChange={handleFileChange}
                     accept="image/*"
-                    error={errors.image}
+                    error={errors.studentDocument?.image}
                 />
                 <DocumentUpload
                     title="Birth Certificate"
-                    name="birthCertificate"
-                    value={formData.birthCertificate}
+                    name="studentDocument.birthCertificate"
+                    value={formData.studentDocument?.birthCertificate}
                     onChange={handleFileChange}
                     accept="image/*,.pdf"
-                    error={errors.birthCertificate}
+                    error={errors.studentDocument?.birthCertificate}
                 />
                 <DocumentUpload
                     title="Household Registration"
-                    name="householdRegistration"
-                    value={formData.householdRegistration}
+                    name="studentDocument.householdRegistration"
+                    value={formData.studentDocument?.householdRegistration}
                     onChange={handleFileChange}
                     accept="image/*,.pdf"
-                    error={errors.householdRegistration}
+                    error={errors.studentDocument?.householdRegistration}
                 />
             </Stack>
         </FormSection>

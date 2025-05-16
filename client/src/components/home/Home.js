@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from './Sidebar';
+import Sidebar, { staticNavItems } from './Sidebar';
 import ContentHeader from './ContentHeader';
 import Dashboard from '../dashboard/Dashboard';
 import CalendarPanel from './CalendarPanel';
@@ -18,6 +18,9 @@ import TeacherList from '../../modules/teacher/components/TeacherList';
 import AddTeacher from '../../modules/teacher/components/AddTeacher';
 import EditTeacher from '../../modules/teacher/components/EditTeacher';
 import TeacherDetails from '../../modules/teacher/components/TeacherDetails';
+import News from '../../modules/news/News';
+import UserAccountList from '../../modules/user_account/UserAccountList';
+import UserAccountForm from '../../modules/user_account/UserAccountForm';
 import { useTheme } from '../../context/ThemeContext';
 import axios from 'axios';
 import '../../styles/Home.css';
@@ -49,6 +52,8 @@ const Home = () => {
     const [selectedClass, setSelectedClass] = useState(null);
     const [teacherAction, setTeacherAction] = useState('list');
     const [selectedTeacher, setSelectedTeacher] = useState(null);
+    const [accountAction, setAccountAction] = useState('list');
+    const [selectedAccount, setSelectedAccount] = useState(null);
     const { isDark, toggleTheme } = useTheme();
     const [notification, setNotification] = useState(null);
     const [students, setStudents] = useState([]);
@@ -100,11 +105,14 @@ const Home = () => {
             setClassAction('list');
         }
 
-        // Initialize teacher action to list only when first navigating to teachers
         if (selected === 'teachers' && !teacherAction) {
             setTeacherAction('list');
         }
-    }, [selected, studentAction, semesterAction, classAction, teacherAction]);
+
+        if (selected === 'accounts' && !accountAction) {
+            setAccountAction('list');
+        }
+    }, [selected, studentAction, semesterAction, classAction, teacherAction, accountAction]);
 
     const handleLogout = () => {
         localStorage.removeItem('user');
@@ -300,9 +308,9 @@ const Home = () => {
         try {
             setIsLoading(true);
             if (studentAction === 'add') {
-                await axios.post(`${API_URL}/students`, data);
+                await axios.post(`${API_URL}/student`, data);
             } else {
-                await axios.put(`${API_URL}/students/${selectedStudent.id}`, data);
+                await axios.put(`${API_URL}/student/${selectedStudent.id}`, data);
             }
             handleBackToList();
             setNotification({
@@ -319,7 +327,22 @@ const Home = () => {
             setIsLoading(false);
         }
     };
-    
+
+    const handleAccountEdit = (account) => {
+        setSelectedAccount(account);
+        setAccountAction('edit');
+    };
+
+    const handleAccountAdd = () => {
+        setSelectedAccount(null);
+        setAccountAction('add');
+    };
+
+    const handleAccountSubmit = () => {
+        setAccountAction('list');
+        setSelectedAccount(null);
+    };
+
     if (isLoading) {
         return <div className="loading-container">Loading...</div>;
     }
@@ -448,6 +471,25 @@ const Home = () => {
         }
     };
 
+    const renderAccountContent = () => {
+        switch (accountAction) {
+            case 'list':
+                return <UserAccountList
+                    onEdit={handleAccountEdit}
+                    onAdd={handleAccountAdd}
+                />;
+            case 'add':
+            case 'edit':
+                return <UserAccountForm
+                    account={selectedAccount}
+                    onSuccess={handleAccountSubmit}
+                    onCancel={() => setAccountAction('list')}
+                />;
+            default:
+                return null;
+        }
+    };
+
     return (
         <div className={`home-container ${isDark ? 'dark' : ''}`}>
             <Sidebar
@@ -464,6 +506,8 @@ const Home = () => {
                     user={user}
                     isDark={isDark}
                     toggleTheme={toggleTheme}
+                    staticNavItems={staticNavItems}
+                    setSelected={setSelected}
                 />
                 <div className="content-wrapper">
                     <div className="content">
@@ -472,6 +516,8 @@ const Home = () => {
                         {selected === 'class' && renderClassContent()}
                         {selected === 'semester' && renderSemesterContent()}
                         {selected === 'teachers' && renderTeacherContent()}
+                        {selected === 'accounts' && renderAccountContent()}
+                        {selected === 'news' && <News />}
                     </div>
                     {calendarVisible && (
                         <CalendarPanel

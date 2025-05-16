@@ -27,11 +27,11 @@ const EditStudentForm = ({ onSubmit, isLoading, studentData, activeStep, onBack 
         name: studentData?.name || '',
         dateOfBirth: studentData?.dateOfBirth ? new Date(studentData.dateOfBirth) : null,
         gender: studentData?.gender || '',
-        gradeLevel: studentData?.gradeLevel || '',
+        gradeLevel: String(studentData?.gradeLevel || ''),
         school: studentData?.school || '',
         class: studentData?.class || '',
         educationSystem: studentData?.educationSystem || '',
-        fatherName: studentData?.fatherName || '',
+        fatherFullName: studentData?.fatherFullName || '',
         fatherOccupation: studentData?.fatherOccupation || '',
         motherName: studentData?.motherName || '',
         motherOccupation: studentData?.motherOccupation || '',
@@ -60,7 +60,7 @@ const EditStudentForm = ({ onSubmit, isLoading, studentData, activeStep, onBack 
         // Update form data
         setFormData(prev => ({
             ...prev,
-            [name]: value
+            [name]: name === 'gradeLevel' ? String(value) : value
         }));
 
         // Immediate validation for all fields
@@ -140,9 +140,9 @@ const EditStudentForm = ({ onSubmit, isLoading, studentData, activeStep, onBack 
                 validateField('school', formData.school);
                 validateField('class', formData.class);
                 validateField('educationSystem', formData.educationSystem);
-                validateField('fatherName', formData.fatherName);
+                validateField('fatherFullName', formData.fatherFullName);
                 validateField('fatherOccupation', formData.fatherOccupation);
-                validateField('motherName', formData.motherName);
+                validateField('motherFullName', formData.motherFullName);
                 validateField('motherOccupation', formData.motherOccupation);
                 break;
             
@@ -175,22 +175,10 @@ const EditStudentForm = ({ onSubmit, isLoading, studentData, activeStep, onBack 
                 validateField('school', formData.school);
                 validateField('class', formData.class);
                 validateField('educationSystem', formData.educationSystem);
-                validateField('fatherName', formData.fatherName);
+                validateField('fatherFullName', formData.fatherFullName);
                 validateField('fatherOccupation', formData.fatherOccupation);
-                validateField('motherName', formData.motherName);
+                validateField('motherFullName', formData.motherFullName);
                 validateField('motherOccupation', formData.motherOccupation);
-                if (!formData.image) {
-                    newErrors.image = 'Student photo is required';
-                    hasErrors = true;
-                }
-                if (!formData.birthCertificate) {
-                    newErrors.birthCertificate = 'Birth certificate is required';
-                    hasErrors = true;
-                }
-                if (!formData.householdRegistration) {
-                    newErrors.householdRegistration = 'Household registration is required';
-                    hasErrors = true;
-                }
                 break;
         }
 
@@ -210,9 +198,9 @@ const EditStudentForm = ({ onSubmit, isLoading, studentData, activeStep, onBack 
             school: formData.school.trim(),
             class: formData.class.trim(),
             educationSystem: formData.educationSystem.trim(),
-            fatherName: formData.fatherName.trim(),
+            fatherFullName: formData.fatherFullName.trim(),
             fatherOccupation: formData.fatherOccupation.trim(),
-            motherName: formData.motherName.trim(),
+            motherFullName: formData.motherFullName.trim(),
             motherOccupation: formData.motherOccupation.trim(),
             dateOfBirth: formData.dateOfBirth instanceof Date
                 ? format(formData.dateOfBirth, 'dd-MM-yyyy')

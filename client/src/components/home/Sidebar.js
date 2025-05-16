@@ -2,7 +2,7 @@ import React from 'react';
 import { FaTachometerAlt, FaUserGraduate, FaNewspaper, FaUsers, FaSignOutAlt, FaBars, FaChevronLeft, FaChalkboardTeacher, FaCalendarAlt } from 'react-icons/fa';
 import '../../styles/Sidebar.css';
 
-const staticNavItems = [
+export const staticNavItems = [
     { key: 'dashboard', label: 'Dashboard', icon: <FaTachometerAlt /> },
     { key: 'students', label: 'Students', icon: <FaUserGraduate /> },
     { key: 'teachers', label: 'Teachers', icon: <FaChalkboardTeacher /> },
@@ -35,7 +35,12 @@ function Sidebar({
                 <button className="sidebar-collapse-btn" onClick={toggleCollapse}>
                     {collapsed ? <FaBars /> : <FaChevronLeft />}
                 </button>
-                {!collapsed && <div className="sidebar-logo">Kindergarten Admin</div>}
+                {!collapsed && (
+                    <div className="sidebar-logo">
+                        <span className="kindergarten-text">Kindergarten</span>
+                        <span className="admin-text">Admin</span>
+                    </div>
+                )}
             </div>
             <div className="sidebar-nav">
                 {staticNavItems.map(item => (

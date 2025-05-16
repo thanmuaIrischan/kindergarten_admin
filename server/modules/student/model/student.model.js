@@ -1,102 +1,94 @@
-// Firebase Student Data Model Structure
+const imageService = require('../service/image.service');
+
 const studentModel = {
     studentProfile: {
-        firstName: '',
-        lastName: '',
-        dateOfBirth: '', // ISO string
-        gender: '', // 'male', 'female', 'other'
-        parentName: '',
-        parentContact: '',
-        parentEmail: '',
-        address: '',
-        enrollmentDate: '', // ISO string
+        studentID: '',
+        name: '',
+        dateOfBirth: '',
+        gender: '',
+        fatherFullname: '',
+        fatherOccupation: '',
+        motherFullname: '',
+        motherOccupation: '',
+        gradeLevel: 0,
+        school: '',
         class: '',
-        medicalConditions: [], // array of strings
-        emergencyContact: {
-            name: '',
-            relationship: '',
-            phone: ''
-        }
+        educationSystem: ''
     },
     studentDocument: {
-        studentPhoto: {
-            url: '',
-            public_id: ''
-        },
-        transcriptPhoto: {
-            url: '',
-            public_id: ''
-        },
-        householdRegistration: {
-            url: '',
-            public_id: ''
-        }
-    },
-    createdAt: '', // ISO string
-    updatedAt: '' // ISO string
+        image: '',
+        birthCertificate: '',
+        householdRegistration: ''
+    }
 };
 
-// Helper function to convert client data to Firebase format
 const toFirebaseFormat = (data) => {
+    // Check if data has nested structure
+    const profile = data.studentProfile || data;
+    
+    if (!profile.studentID) {
+        throw new Error('studentID is required');
+    }
+    if (!profile.name) {
+        throw new Error('name is required');
+    }
+    if (!profile.class) {
+        throw new Error('class is required');
+    }
+
     return {
         studentProfile: {
-            firstName: data.firstName || '',
-            lastName: data.lastName || '',
-            dateOfBirth: data.dateOfBirth || new Date().toISOString(),
-            gender: data.gender || '',
-            parentName: data.parentName || '',
-            parentContact: data.parentContact || '',
-            parentEmail: data.parentEmail || '',
-            address: data.address || '',
-            enrollmentDate: data.enrollmentDate || new Date().toISOString(),
-            class: data.class || '',
-            medicalConditions: Array.isArray(data.medicalConditions) ? data.medicalConditions : [],
-            emergencyContact: {
-                name: data.emergencyContact?.name || '',
-                relationship: data.emergencyContact?.relationship || '',
-                phone: data.emergencyContact?.phone || ''
-            }
+            studentID: profile.studentID,
+            name: profile.name,
+            dateOfBirth: profile.dateOfBirth || '',
+            gender: profile.gender || '',
+            fatherFullname: profile.fatherFullname || '',
+            fatherOccupation: profile.fatherOccupation || '',
+            motherFullname: profile.motherFullname || '',
+            motherOccupation: profile.motherOccupation || '',
+            gradeLevel: parseInt(profile.gradeLevel) || 0,
+            school: profile.school || '',
+            class: profile.class || '',
+            educationSystem: profile.educationSystem || ''
         },
-        studentDocument: {
-            studentPhoto: data.studentPhoto || { url: '', public_id: '' },
-            transcriptPhoto: data.transcriptPhoto || { url: '', public_id: '' },
-            householdRegistration: data.householdRegistration || { url: '', public_id: '' }
-        },
-        createdAt: data.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        studentDocument: data.studentDocument || {
+            image: '',
+            birthCertificate: '',
+            householdRegistration: ''
+        }
     };
 };
 
-// Helper function to convert Firebase data to client format
 const toClientFormat = (doc) => {
     const data = doc.data();
     const profile = data.studentProfile || {};
-    const documents = data.studentDocument || {};
-
-    return {
+    
+    const student = {
         id: doc.id,
-        firstName: profile.firstName || '',
-        lastName: profile.lastName || '',
+        studentID: profile.studentID || '',
+        name: profile.name || '',
         dateOfBirth: profile.dateOfBirth || '',
         gender: profile.gender || '',
-        parentName: profile.parentName || '',
-        parentContact: profile.parentContact || '',
-        parentEmail: profile.parentEmail || '',
-        address: profile.address || '',
-        enrollmentDate: profile.enrollmentDate || '',
+        fatherFullname: profile.fatherFullname || '',
+        fatherOccupation: profile.fatherOccupation || '',
+        motherFullname: profile.motherFullname || '',
+        motherOccupation: profile.motherOccupation || '',
+        gradeLevel: profile.gradeLevel || 0,
+        school: profile.school || '',
         class: profile.class || '',
-        medicalConditions: profile.medicalConditions || [],
-        emergencyContact: profile.emergencyContact || {},
-        studentPhoto: documents.studentPhoto || null,
-        transcriptPhoto: documents.transcriptPhoto || null,
-        householdRegistration: documents.householdRegistration || null,
-        createdAt: data.createdAt || '',
-        updatedAt: data.updatedAt || ''
+        educationSystem: profile.educationSystem || '',
+        studentDocument: data.studentDocument || {
+            image: '',
+            birthCertificate: '',
+            householdRegistration: ''
+        }
     };
+
+    return imageService.processStudentImages(student);
 };
 
 module.exports = {
     studentModel,
     toFirebaseFormat,
     toClientFormat
-}; 
+};

@@ -61,16 +61,16 @@ const ReviewSection = ({ formData }) => {
                         Parent Information
                     </Typography>
                     <Typography variant="body1" sx={{ mt: 1 }}>
-                        Father's Name: {formData.fatherName}
+                        Father's Name: {formData.fatherFullname || 'N/A'}
                     </Typography>
                     <Typography variant="body1">
-                        Father's Occupation: {formData.fatherOccupation}
+                        Father's Occupation: {formData.fatherOccupation || 'N/A'}
                     </Typography>
                     <Typography variant="body1">
-                        Mother's Name: {formData.motherName}
+                        Mother's Name: {formData.motherFullname || 'N/A'}
                     </Typography>
                     <Typography variant="body1">
-                        Mother's Occupation: {formData.motherOccupation}
+                        Mother's Occupation: {formData.motherOccupation || 'N/A'}
                     </Typography>
                 </Box>
             </Stack>

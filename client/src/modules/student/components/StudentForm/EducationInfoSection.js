@@ -68,7 +68,7 @@ const EducationInfoSection = ({ formData, errors, handleInputChange, handleBlur 
                     disabled={loading}
                 >
                     {classes.map((classItem) => (
-                        <MenuItem key={classItem.id} value={classItem.className}>
+                        <MenuItem key={classItem.id} value={classItem.id}>
                             {classItem.className}
                         </MenuItem>
                     ))}

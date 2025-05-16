@@ -25,11 +25,11 @@ const BasicInfoSection = ({ formData, errors, handleInputChange, handleBlur, han
                 onBlur={handleBlur}
                 inputProps={{ 
                     autoComplete: 'off',
-                    maxLength: 7,
-                    pattern: '[0-9]*'
+                    maxLength: 10,
+                    style: { textTransform: 'uppercase' }
                 }}
                 error={!!errors.studentID}
-                helperText={errors.studentID}
+                helperText={errors.studentID || 'Enter 6-10 alphanumeric characters'}
                 InputProps={{
                     endAdornment: (
                         <InputAdornment position="end">
@@ -41,28 +41,6 @@ const BasicInfoSection = ({ formData, errors, handleInputChange, handleBlur, han
                         </InputAdornment>
                     )
                 }}
-            />
-            <InputField
-                required
-                name="firstName"
-                label="First Name"
-                value={formData.firstName}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-                inputProps={{ autoComplete: 'off' }}
-                error={!!errors.firstName}
-                helperText={errors.firstName}
-            />
-            <InputField
-                required
-                name="lastName"
-                label="Last Name"
-                value={formData.lastName}
-                onChange={handleInputChange}
-                onBlur={handleBlur}
-                inputProps={{ autoComplete: 'off' }}
-                error={!!errors.lastName}
-                helperText={errors.lastName}
             />
             <InputField
                 required
@@ -79,14 +57,23 @@ const BasicInfoSection = ({ formData, errors, handleInputChange, handleBlur, han
                 label="Date of Birth"
                 value={formData.dateOfBirth}
                 onChange={handleDateChange}
+                maxDate={new Date()}
                 renderInput={(params) => (
                     <InputField
                         {...params}
                         required
                         error={!!errors.dateOfBirth}
-                        helperText={errors.dateOfBirth}
+                        helperText={errors.dateOfBirth || 'Format: DD-MM-YYYY'}
+                        inputProps={{
+                            ...params.inputProps,
+                            placeholder: 'DD-MM-YYYY'
+                        }}
                     />
                 )}
+                inputFormat="dd-MM-yyyy"
+                mask="__-__-____"
+                views={['year', 'month', 'day']}
+                disableFuture
             />
             <FormControl
                 fullWidth
@@ -109,9 +96,9 @@ const BasicInfoSection = ({ formData, errors, handleInputChange, handleBlur, han
                         ) : null
                     }
                 >
-                    <MenuItem value="male">Male</MenuItem>
-                    <MenuItem value="female">Female</MenuItem>
-                    <MenuItem value="other">Other</MenuItem>
+                    <MenuItem value="Male">Male</MenuItem>
+                    <MenuItem value="Female">Female</MenuItem>
+                    <MenuItem value="Other">Other</MenuItem>
                 </Select>
                 {errors.gender && (
                     <FormHelperText>{errors.gender}</FormHelperText>

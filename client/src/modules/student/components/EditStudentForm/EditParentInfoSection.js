@@ -11,11 +11,41 @@ const EditParentInfoSection = ({ formData, handleChange, errors }) => {
             <Grid container spacing={3}>
                 <Grid item xs={12} sm={6}>
                     <InputField
-                        label="Parent/Guardian Name"
-                        name="parentName"
-                        value={formData.parentName}
+                        label="Father's Name"
+                        name="fatherFullname"
+                        value={formData.fatherFullname}
                         onChange={handleChange}
-                        error={errors.parentName}
+                        error={errors.fatherFullname}
+                        required
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <InputField
+                        label="Father's Occupation"
+                        name="fatherOccupation"
+                        value={formData.fatherOccupation}
+                        onChange={handleChange}
+                        error={errors.fatherOccupation}
+                        required
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <InputField
+                        label="Mother's Name"
+                        name="motherFullname"
+                        value={formData.motherFullname}
+                        onChange={handleChange}
+                        error={errors.motherFullname}
+                        required
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                    <InputField
+                        label="Mother's Occupation"
+                        name="motherOccupation"
+                        value={formData.motherOccupation}
+                        onChange={handleChange}
+                        error={errors.motherOccupation}
                         required
                     />
                 </Grid>
@@ -37,38 +67,6 @@ const EditParentInfoSection = ({ formData, handleChange, errors }) => {
                         <option value="mother">Mother</option>
                         <option value="guardian">Guardian</option>
                     </InputField>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <InputField
-                        label="Phone Number"
-                        name="parentPhone"
-                        value={formData.parentPhone}
-                        onChange={handleChange}
-                        error={errors.parentPhone}
-                        required
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                    <InputField
-                        label="Email"
-                        name="parentEmail"
-                        type="email"
-                        value={formData.parentEmail}
-                        onChange={handleChange}
-                        error={errors.parentEmail}
-                    />
-                </Grid>
-                <Grid item xs={12}>
-                    <InputField
-                        label="Parent Address"
-                        name="parentAddress"
-                        value={formData.parentAddress}
-                        onChange={handleChange}
-                        error={errors.parentAddress}
-                        required
-                        multiline
-                        rows={3}
-                    />
                 </Grid>
             </Grid>
         </Box>
