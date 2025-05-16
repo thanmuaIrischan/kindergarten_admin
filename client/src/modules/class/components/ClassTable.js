@@ -114,9 +114,9 @@ const EditClassDialog = ({ open, onClose, classData, onClassUpdate }) => {
         setError(null);
 
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                setError('Authentication token not found');
+            const userData = localStorage.getItem('user');
+            if (!userData) {
+                setError('User session not found. Please login again.');
                 return;
             }
 
@@ -136,7 +136,6 @@ const EditClassDialog = ({ open, onClose, classData, onClassUpdate }) => {
                 updateData,
                 {
                     headers: {
-                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 }
