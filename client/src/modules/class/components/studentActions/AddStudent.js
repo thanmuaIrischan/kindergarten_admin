@@ -41,20 +41,64 @@ const AddStudent = ({ open, onClose, classId, currentStudentIds = [], onStudentA
 
     useEffect(() => {
         if (open) {
+            setSelectedStudents([]);
+            setSearchTerm('');
             fetchAvailableStudents();
-            setSelectedStudents([]); // Reset selections when dialog opens
         }
-    }, [open]);
+    }, [open, currentStudentIds]);
 
     const fetchAvailableStudents = async () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get(`${API_URL}/student`);
-            // Filter out students that are already in the class
-            const availableStudents = response.data.data.filter(
-                student => !currentStudentIds.includes(student.studentID)
-            );
+            // Get all students from Firebase without limitation
+            const response = await axios.get(`${API_URL}/student`, {
+                params: {
+                    limit: 0 // Set limit to 0 to get all records
+                }
+            });
+
+            if (!response.data || !response.data.data) {
+                throw new Error('Invalid response format from server');
+            }
+
+            console.log('Total students from server:', response.data.data.length);
+
+            // Get all classes to check which students are already assigned
+            const classesResponse = await axios.get(`${API_URL}/class`);
+            const allClasses = classesResponse.data.data || [];
+
+            // Create a set of all assigned student IDs across all classes
+            const assignedStudentIds = new Set();
+            allClasses.forEach(classItem => {
+                if (classItem.students && Array.isArray(classItem.students)) {
+                    classItem.students.forEach(studentId => assignedStudentIds.add(studentId));
+                }
+            });
+
+            console.log('Students already assigned to classes:', assignedStudentIds.size);
+
+            // Filter out students that are already in any class
+            const availableStudents = response.data.data
+                .filter(student => !assignedStudentIds.has(student.studentID))
+                .map(student => ({
+                    id: student.id,
+                    studentID: student.studentID,
+                    firstName: student.firstName,
+                    lastName: student.lastName,
+                    gender: student.gender,
+                    dateOfBirth: student.dateOfBirth,
+                    phone: student.phone,
+                    email: student.email,
+                    address: student.address,
+                    avatar: student.avatar
+                }));
+
+            console.log('Available students after filter:', availableStudents.length);
+            
+            if (availableStudents.length === 0) {
+                setError('No available students to add to this class. All students are already assigned to classes.');
+            }
             setStudents(availableStudents);
         } catch (error) {
             console.error('Error fetching students:', error);
@@ -88,39 +132,39 @@ const AddStudent = ({ open, onClose, classId, currentStudentIds = [], onStudentA
                 throw new Error('Class ID is missing');
             }
 
-            // Get current class data
             const classResponse = await axios.get(`${API_URL}/class/${classId}`);
             const currentClass = classResponse.data.data;
 
-            // Get current student IDs and add new ones
             const currentStudents = currentClass.students || [];
             const newStudentIds = selectedStudents.map(student => student.studentID);
 
-            // Check for duplicates
-            const duplicates = newStudentIds.filter(id => currentStudents.includes(id));
-            if (duplicates.length > 0) {
-                throw new Error('Some selected students are already in this class');
+            const duplicateStudents = selectedStudents.filter(
+                student => currentStudents.includes(student.studentID)
+            );
+
+            if (duplicateStudents.length > 0) {
+                const duplicateNames = duplicateStudents
+                    .map(s => `${s.firstName} ${s.lastName} (${s.studentID})`)
+                    .join(', ');
+                throw new Error(`The following students are already in this class: ${duplicateNames}`);
             }
 
-            // Update class with new students
             const updatedStudents = [...currentStudents, ...newStudentIds];
 
-            // Update the class with the new students
             const response = await axios.put(`${API_URL}/class/${classId}`, {
                 ...currentClass,
                 students: updatedStudents
             });
 
             if (response.data.success) {
-                // Call the callback with updated data
-                onStudentAdd(selectedStudents, response.data.data);
+                await onStudentAdd(selectedStudents, response.data.data);
                 onClose();
             } else {
                 throw new Error('Failed to add students to class');
             }
         } catch (error) {
             console.error('Error adding students:', error);
-            setError(error.response?.data?.message || error.message || 'Failed to add students. Please try again.');
+            setError(error.message || 'Failed to add students. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -170,6 +214,11 @@ const AddStudent = ({ open, onClose, classId, currentStudentIds = [], onStudentA
                     <Typography variant="subtitle1" sx={{ mb: 1 }}>
                         Selected Students: {selectedStudents.length}
                     </Typography>
+                    {students.length > 0 && (
+                        <Typography variant="body2" color="textSecondary">
+                            Total Available: {students.length} students
+                        </Typography>
+                    )}
                 </Box>
 
                 <TextField
@@ -194,7 +243,26 @@ const AddStudent = ({ open, onClose, classId, currentStudentIds = [], onStudentA
                         {searchTerm ? 'No matching students found' : 'No available students'}
                     </Typography>
                 ) : (
-                    <List sx={{ maxHeight: 400, overflow: 'auto' }}>
+                    <List 
+                        sx={{ 
+                            maxHeight: '60vh', 
+                            overflow: 'auto',
+                            '&::-webkit-scrollbar': {
+                                width: '8px',
+                            },
+                            '&::-webkit-scrollbar-track': {
+                                backgroundColor: 'rgba(0,0,0,0.1)',
+                                borderRadius: '4px',
+                            },
+                            '&::-webkit-scrollbar-thumb': {
+                                backgroundColor: 'rgba(0,0,0,0.2)',
+                                borderRadius: '4px',
+                                '&:hover': {
+                                    backgroundColor: 'rgba(0,0,0,0.3)',
+                                },
+                            },
+                        }}
+                    >
                         {filteredStudents.map((student) => {
                             const isSelected = selectedStudents.some(s => s.studentID === student.studentID);
                             return (
@@ -229,7 +297,13 @@ const AddStudent = ({ open, onClose, classId, currentStudentIds = [], onStudentA
                                     </ListItemAvatar>
                                     <ListItemText
                                         primary={`${student.lastName} ${student.firstName}`}
-                                        secondary={`Student ID: ${student.studentID}`}
+                                        secondary={
+                                            <React.Fragment>
+                                                <Typography component="span" variant="body2">
+                                                    ID: {student.studentID}
+                                                </Typography>
+                                            </React.Fragment>
+                                        }
                                     />
                                     <ListItemSecondaryAction>
                                         <Checkbox

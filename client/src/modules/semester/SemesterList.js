@@ -40,6 +40,7 @@ import axios from 'axios';
 import SemesterTable from './components/SemesterTable';
 import * as XLSX from 'xlsx';
 import { useReactToPrint } from 'react-to-print';
+import { printSemesterList } from './services/PrintService';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
@@ -521,10 +522,10 @@ const SemesterList = ({ onEdit, onAdd, onViewDetails }) => {
                             </IconButton>
                         </span>
                     </Tooltip>
-                    <Tooltip title="Print">
+                    <Tooltip title="Print List">
                         <span>
                             <IconButton
-                                onClick={handlePrint}
+                                onClick={() => printSemesterList(filteredSemesters)}
                                 sx={actionButtonStyle}
                             >
                                 <PrintIcon />

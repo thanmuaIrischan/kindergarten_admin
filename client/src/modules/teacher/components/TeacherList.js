@@ -43,6 +43,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import axios from 'axios';
+import { printTeacherList } from '../services/PrintService';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
@@ -395,23 +396,12 @@ const TeacherList = ({ onAdd, onEdit, onViewDetails }) => {
                             />
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title="Print">
+                    <Tooltip title="Print List">
                         <IconButton
-                            onClick={handlePrint}
-                            sx={{
-                                ...actionButtonStyle,
-                                '& .MuiSvgIcon-root': {
-                                    fontSize: '1.5rem',
-                                    color: 'inherit'
-                                }
-                            }}
-                            disabled={printLoading}
+                            onClick={() => printTeacherList(teachers)}
+                            sx={actionButtonStyle}
                         >
-                            {printLoading ? (
-                                <CircularProgress size={24} sx={{ color: 'inherit' }} />
-                            ) : (
-                                <PrintIcon sx={{ color: 'inherit' }} />
-                            )}
+                            <PrintIcon />
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Help">

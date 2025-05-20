@@ -31,7 +31,7 @@ const NewsSearch = ({ onSearch }) => {
     >
       <InputBase
         sx={{ ml: 1, flex: 1 }}
-        placeholder="Tìm kiếm tin tức..."
+        placeholder="Search news..."
         value={searchTerm}
         onChange={handleChange}
       />

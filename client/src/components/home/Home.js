@@ -70,6 +70,15 @@ const Home = () => {
             if (!parsedUser || !parsedUser.fullName) {
                 throw new Error('Invalid user data');
             }
+            
+            // Check if user is admin
+            if (parsedUser.role !== 'admin') {
+                console.log('Non-admin user attempting to access Home page');
+                localStorage.removeItem('user');
+                navigate('/login');
+                return;
+            }
+            
             setUser(parsedUser);
             setStudents(parsedUser.students || []);
         } catch (error) {
@@ -308,10 +317,8 @@ const Home = () => {
         try {
             setIsLoading(true);
             if (studentAction === 'add') {
-                console.log("Add data", data);
                 await axios.post(`${API_URL}/student`, data);
             } else {
-                console.log("Update data", data);
                 await axios.put(`${API_URL}/student/${selectedStudent.id}`, data);
             }
             handleBackToList();

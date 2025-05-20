@@ -146,13 +146,13 @@ const NewsForm = ({ onSubmit, initialData = null, loading = false }) => {
       try {
         // Validate file type
         if (!file.type.startsWith('image/')) {
-          setUploadError('Vui lòng chọn file hình ảnh');
+          setUploadError('Please select an image file');
           return;
         }
 
         // Early file size check
         if (file.size > MAX_INITIAL_FILE_SIZE) {
-          setUploadError('File quá lớn. Vui lòng chọn ảnh có kích thước nhỏ hơn 10MB.');
+          setUploadError('File is too large. Please select an image smaller than 10MB.');
           return;
         }
 
@@ -162,7 +162,7 @@ const NewsForm = ({ onSubmit, initialData = null, loading = false }) => {
         // Check compressed size
         const base64Size = Math.round((compressedImage.length * 3) / 4);
         if (base64Size > MAX_FILE_SIZE) {
-          setUploadError('Kích thước file vẫn quá lớn sau khi nén. Vui lòng chọn ảnh có kích thước nhỏ hơn.');
+          setUploadError('File is still too large after compression. Please select a smaller image.');
           return;
         }
 
@@ -171,7 +171,7 @@ const NewsForm = ({ onSubmit, initialData = null, loading = false }) => {
         setSelectedSubtitleIndex(index);
       } catch (error) {
         console.error('Error processing image:', error);
-        setUploadError('Có lỗi xảy ra khi xử lý ảnh. Vui lòng thử lại.');
+        setUploadError('An error occurred while processing the image. Please try again.');
       }
     }
   };
@@ -182,11 +182,11 @@ const NewsForm = ({ onSubmit, initialData = null, loading = false }) => {
 
     // Validate required fields
     if (!formData.title.trim()) {
-      setUploadError('Vui lòng nhập tiêu đề');
+      setUploadError('Please enter a title');
       return;
     }
     if (!formData.type.trim()) {
-      setUploadError('Vui lòng nhập loại tin tức');
+      setUploadError('Please enter a news type');
       return;
     }
 
@@ -195,7 +195,7 @@ const NewsForm = ({ onSubmit, initialData = null, loading = false }) => {
       subtitle => !subtitle.content.trim()
     );
     if (hasEmptyContent) {
-      setUploadError('Vui lòng nhập nội dung cho tất cả các phần');
+      setUploadError('Please enter content for all sections');
       return;
     }
 
@@ -216,7 +216,7 @@ const NewsForm = ({ onSubmit, initialData = null, loading = false }) => {
         <Grid item xs={12}>
           <TextField
             fullWidth
-            label="Tiêu đề"
+            label="Title"
             name="title"
             value={formData.title}
             onChange={handleChange}
@@ -241,7 +241,7 @@ const NewsForm = ({ onSubmit, initialData = null, loading = false }) => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
-            label="Loại tin tức"
+            label="News Type"
             name="type"
             value={formData.type}
             onChange={handleChange}
@@ -276,9 +276,10 @@ const NewsForm = ({ onSubmit, initialData = null, loading = false }) => {
               <Box component="form" onSubmit={handleAddTag}>
                 <TextField
                   fullWidth
-                  label="Thêm tag"
+                  label="Add Tags"
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddTag(e)}
                   disabled={loading}
                   variant="outlined"
                   sx={{
@@ -290,10 +291,10 @@ const NewsForm = ({ onSubmit, initialData = null, loading = false }) => {
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
-                        <IconButton 
-                          onClick={handleAddTag} 
-                          disabled={!tagInput.trim() || loading}
-                          color="primary"
+                        <Button
+                          onClick={handleAddTag}
+                          variant="contained"
+                          disabled={loading || !tagInput.trim()}
                           sx={{ 
                             '&:hover': { 
                               backgroundColor: 'primary.50' 
@@ -301,7 +302,7 @@ const NewsForm = ({ onSubmit, initialData = null, loading = false }) => {
                           }}
                         >
                           <AddIcon />
-                        </IconButton>
+                        </Button>
                       </InputAdornment>
                     ),
                   }}
@@ -351,7 +352,7 @@ const NewsForm = ({ onSubmit, initialData = null, loading = false }) => {
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 3 }}>
             <DescriptionIcon color="primary" />
             <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-              Nội dung
+              Content
             </Typography>
           </Stack>
 
@@ -375,7 +376,7 @@ const NewsForm = ({ onSubmit, initialData = null, loading = false }) => {
                 <Box sx={{ flex: 1 }}>
                   <TextField
                     fullWidth
-                    label="Tiêu đề phụ"
+                    label="Section Title (Optional)"
                     value={subtitle.subtitleName}
                     onChange={(e) => handleSubtitleChange(index, 'subtitleName', e.target.value)}
                     disabled={loading}
@@ -395,7 +396,7 @@ const NewsForm = ({ onSubmit, initialData = null, loading = false }) => {
                   />
                 </Box>
                 <Stack direction="row" spacing={1}>
-                  <Tooltip title="Thêm ảnh">
+                  <Tooltip title="Add Image">
                     <IconButton
                       component="label"
                       color="primary"
@@ -415,7 +416,7 @@ const NewsForm = ({ onSubmit, initialData = null, loading = false }) => {
                       <AddPhotoIcon />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Xóa phần này">
+                  <Tooltip title="Remove Section">
                     <IconButton
                       color="error"
                       onClick={() => handleRemoveSubtitle(index)}
@@ -436,12 +437,19 @@ const NewsForm = ({ onSubmit, initialData = null, loading = false }) => {
                 fullWidth
                 multiline
                 rows={4}
-                label="Nội dung"
+                label="Content"
                 value={subtitle.content}
                 onChange={(e) => handleSubtitleChange(index, 'content', e.target.value)}
                 required
                 disabled={loading}
                 variant="outlined"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <DescriptionIcon color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
                 sx={{
                   mb: 2,
                   '& .MuiOutlinedInput-root': {
@@ -497,7 +505,7 @@ const NewsForm = ({ onSubmit, initialData = null, loading = false }) => {
               }
             }}
           >
-            Thêm nội dung
+            Add Section
           </Button>
         </CardContent>
       </Card>
@@ -545,7 +553,7 @@ const NewsForm = ({ onSubmit, initialData = null, loading = false }) => {
           {loading ? (
             <CircularProgress size={24} color="inherit" />
           ) : (
-            initialData ? 'Cập nhật' : 'Tạo mới'
+            initialData ? 'Update' : 'Create'
           )}
         </Button>
       </Box>
@@ -564,7 +572,7 @@ const NewsForm = ({ onSubmit, initialData = null, loading = false }) => {
       >
         <DialogTitle>
           <Typography variant="h6" component="div" sx={{ fontWeight: 500 }}>
-            Xem trước hình ảnh
+            Image Preview
           </Typography>
         </DialogTitle>
         <DialogContent>
@@ -587,7 +595,7 @@ const NewsForm = ({ onSubmit, initialData = null, loading = false }) => {
             disabled={loading}
             sx={{ borderRadius: 2 }}
           >
-            Đóng
+            Close
           </Button>
         </DialogActions>
       </Dialog>

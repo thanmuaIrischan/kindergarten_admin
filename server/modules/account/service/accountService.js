@@ -8,7 +8,7 @@ const authenticate = async (username, password) => {
 
     if (!username || !password) {
       console.log('Missing username or password');
-      return { success: false, message: 'Invalid credentials' };
+      return { success: false, message: 'Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu' };
     }
 
     const account = await accountRepository.findByUsername(username);
@@ -16,7 +16,7 @@ const authenticate = async (username, password) => {
 
     if (!account) {
       console.log('No account found for username:', username);
-      return { success: false, message: 'Invalid credentials' };
+      return { success: false, message: 'Tên đăng nhập hoặc mật khẩu không đúng' };
     }
 
     // Add debug logging for account data
@@ -24,6 +24,15 @@ const authenticate = async (username, password) => {
       ...account,
       password: '***' // Mask password in logs
     });
+
+    // Check if user is admin
+    if (account.role !== 'admin') {
+      console.log('User is not an admin. Access denied.');
+      return { 
+        success: false, 
+        message: 'Tài khoản không có quyền truy cập. Chỉ tài khoản Admin mới được phép đăng nhập.' 
+      };
+    }
 
     // Test password match
     const storedPassword = account.password;
@@ -33,7 +42,7 @@ const authenticate = async (username, password) => {
     console.log('Password match:', isPasswordValid);
 
     if (!isPasswordValid) {
-      return { success: false, message: 'Invalid credentials' };
+      return { success: false, message: 'Tên đăng nhập hoặc mật khẩu không đúng' };
     }
 
     // Ensure we're returning all required fields
@@ -54,7 +63,7 @@ const authenticate = async (username, password) => {
     };
   } catch (error) {
     console.error('Authentication error:', error);
-    return { success: false, message: 'Authentication failed' };
+    return { success: false, message: 'Đã xảy ra lỗi trong quá trình đăng nhập' };
   }
 };
 

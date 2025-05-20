@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Table,
     TableBody,
@@ -23,6 +23,7 @@ import {
     Visibility as VisibilityIcon,
     SwapHoriz as SwapHorizIcon,
 } from '@mui/icons-material';
+import { getStudentDisplayName } from '../../services/StudentDisplayService';
 
 const StudentTable = ({
     students,
@@ -37,6 +38,10 @@ const StudentTable = ({
     onAction,
 }) => {
     const [selectedStudents, setSelectedStudents] = useState([]);
+
+    useEffect(() => {
+        console.log('StudentTable - Received students:', students);
+    }, [students]);
 
     const handleSelectAllClick = (event) => {
         if (event.target.checked) {
@@ -98,6 +103,10 @@ const StudentTable = ({
         </Stack>
     );
 
+    // Calculate the current page's students
+    const currentPageStudents = students.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+    console.log('Current page students:', currentPageStudents);
+
     return (
         <Paper
             elevation={0}
@@ -107,62 +116,10 @@ const StudentTable = ({
                 border: theme => `1px solid ${theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.12)' : 'rgba(0, 0, 0, 0.1)'}`,
                 borderRadius: 2,
                 backgroundColor: theme => theme.palette.mode === 'dark' ? '#fff' : 'rgba(0, 0, 0, 0.02)',
-                '& .MuiTable-root': {
-                    backgroundColor: theme => theme.palette.mode === 'dark' ? '#fff' : 'inherit',
-                },
-                '& .MuiTable-root.MuiTable-stickyHeader': {
-                    backgroundColor: theme => theme.palette.mode === 'dark' ? '#fff' : 'inherit',
-                },
-                '& .MuiTableCell-root': {
-                    backgroundColor: theme => theme.palette.mode === 'dark' ? '#fff' : 'inherit',
-                    color: theme => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : 'inherit',
-                    borderBottom: theme => `1px solid ${theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.12)' : 'rgba(224, 224, 224, 1)'}`,
-                },
-                '& .MuiTableHead-root .MuiTableCell-root': {
-                    backgroundColor: theme => theme.palette.mode === 'dark' ? '#fff' : 'inherit',
-                    color: theme => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : 'inherit',
-                    fontWeight: 600,
-                },
-                '& .MuiTableRow-root:hover': {
-                    backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.04)' : 'rgba(0, 0, 0, 0.04)',
-                },
-                '& .MuiTableRow-root.Mui-selected': {
-                    backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(25, 118, 210, 0.08)' : 'rgba(25, 118, 210, 0.08)',
-                },
-                '& .MuiTablePagination-root': {
-                    color: theme => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : 'inherit',
-                    borderTop: theme => `1px solid ${theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.12)' : 'rgba(224, 224, 224, 1)'}`,
-                },
-                '& .MuiTablePagination-select': {
-                    color: theme => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : 'inherit',
-                },
-                '& .MuiTablePagination-selectIcon': {
-                    color: theme => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.54)' : 'inherit',
-                },
-                '& .MuiIconButton-root': {
-                    color: theme => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.54)' : 'inherit',
-                    '&:hover': {
-                        backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.04)' : 'rgba(0, 0, 0, 0.04)',
-                    },
-                },
-                '& .MuiCheckbox-root': {
-                    color: theme => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.54)' : 'inherit',
-                },
-                '& .MuiTooltip-tooltip': {
-                    backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.87)' : 'rgba(97, 97, 97, 0.92)',
-                    color: theme => theme.palette.mode === 'dark' ? '#fff' : '#fff',
-                },
             }}
         >
             <TableContainer sx={{ maxHeight: 440 }}>
-                <Table stickyHeader sx={{
-                    '&.MuiTable-root': {
-                        backgroundColor: theme => theme.palette.mode === 'dark' ? '#fff' : 'inherit',
-                    },
-                    '&.MuiTable-stickyHeader': {
-                        backgroundColor: theme => theme.palette.mode === 'dark' ? '#fff' : 'inherit',
-                    }
-                }}>
+                <Table stickyHeader>
                     <TableHead>
                         <TableRow>
                             <TableCell padding="checkbox">
@@ -189,7 +146,7 @@ const StudentTable = ({
                                     </Box>
                                 </TableCell>
                             </TableRow>
-                        ) : students.length === 0 ? (
+                        ) : !Array.isArray(students) || students.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={7} align="center">
                                     <Typography variant="body1" color="text.secondary">
@@ -198,34 +155,39 @@ const StudentTable = ({
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            students
-                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                .map((student) => {
-                                    const isSelected = selectedStudents.some(s => s.studentID === student.studentID);
-                                    return (
+                            currentPageStudents.map((student) => {
+                                if (!student || !student.studentID) {
+                                    console.error('Invalid student data:', student);
+                                    return null;
+                                }
+
+                                const isSelected = selectedStudents.some(s => s.studentID === student.studentID);
+                                console.log('Rendering student row:', student);
+
+                                return (
                                     <TableRow
                                         hover
-                                        key={student.id}
-                                            selected={isSelected}
+                                        key={student.studentID}
+                                        selected={isSelected}
                                         sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                     >
-                                            <TableCell padding="checkbox">
-                                                <Checkbox
-                                                    color="primary"
-                                                    checked={isSelected}
-                                                    onChange={() => handleSelectStudent(student)}
-                                                />
-                                            </TableCell>
+                                        <TableCell padding="checkbox">
+                                            <Checkbox
+                                                color="primary"
+                                                checked={isSelected}
+                                                onChange={() => handleSelectStudent(student)}
+                                            />
+                                        </TableCell>
                                         <TableCell>{student.studentID}</TableCell>
-                                        <TableCell>{` ${student.lastName} ${student.firstName} `}</TableCell>
+                                        <TableCell>{getStudentDisplayName(student)}</TableCell>
                                         <TableCell>{student.gender}</TableCell>
                                         <TableCell>{student.dateOfBirth}</TableCell>
                                         <TableCell align="center">
-                                                <ActionButtons student={student} />
+                                            <ActionButtons student={student} />
                                         </TableCell>
                                     </TableRow>
-                                    );
-                                })
+                                );
+                            }).filter(Boolean)
                         )}
                     </TableBody>
                 </Table>
@@ -241,15 +203,15 @@ const StudentTable = ({
                         Transfer Selected ({selectedStudents.length})
                     </Button>
                 )}
-            <TablePagination
-                rowsPerPageOptions={[5, 10, 25]}
-                component="div"
-                count={students.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={onChangePage}
-                onRowsPerPageChange={onChangeRowsPerPage}
-            />
+                <TablePagination
+                    rowsPerPageOptions={[5, 10, 25]}
+                    component="div"
+                    count={students.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={onChangePage}
+                    onRowsPerPageChange={onChangeRowsPerPage}
+                />
             </Box>
         </Paper>
     );
