@@ -18,8 +18,6 @@ import StudentForm from './components/StudentForm';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
-
 const steps = ['Basic Information', 'Documents', 'Review'];
 
 const AddStudent = ({ onBack }) => {
@@ -84,17 +82,12 @@ const AddStudent = ({ onBack }) => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(sanitizedFormData),
-                body: JSON.stringify(sanitizedFormData),
             });
 
             const data = await response.json();
             console.log('Server response:', data); // Debug log
 
-            const data = await response.json();
-            console.log('Server response:', data); // Debug log
-
             if (!response.ok) {
-                throw new Error(data.error || 'Failed to create student');
                 throw new Error(data.error || 'Failed to create student');
             }
 
@@ -110,7 +103,6 @@ const AddStudent = ({ onBack }) => {
             }
         } catch (error) {
             console.error('Error creating student:', error);
-            setError(error.message || 'Failed to create student. Please try again.');
             setError(error.message || 'Failed to create student. Please try again.');
         } finally {
             setIsLoading(false);
