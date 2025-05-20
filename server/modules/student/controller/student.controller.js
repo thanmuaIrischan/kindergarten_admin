@@ -291,9 +291,9 @@ class StudentController {
             school: req.body.school,
             class: req.body.class,
             educationSystem: req.body.educationSystem,
-            image: req.body.image,
-            birthCertificate: req.body.birthCertificate,
-            householdRegistration: req.body.householdRegistration
+            image: req.body.studentDocument.image,
+            birthCertificate: req.body.studentDocument.birthCertificate,
+            householdRegistration: req.body.studentDocument.householdRegistration
         };
 
         const student = await this.studentService.updateStudent(req.params.id, studentData);

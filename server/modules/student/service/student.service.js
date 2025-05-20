@@ -58,13 +58,20 @@ class StudentService {
 
     async updateStudent(id, studentData) {
         try {
+            // Convert gradeLevel to number if it is a string
+            if (studentData.gradeLevel && typeof studentData.gradeLevel === 'string' && !isNaN(studentData.gradeLevel)) {
+                studentData.gradeLevel = Number(studentData.gradeLevel);
+            }
+            
             const { error } = validateStudent(studentData, 'update');
             if (error) {
                 throw new ErrorResponse(error.details.map(e => e.message).join(', '), 400);
             }
 
             const student = await this.studentRepository.findById(id);
+            console.log("student after findByID", student);
             const formattedData = toFirebaseFormat(studentData);
+            console.log("Formatted data", formattedData);
 
             const fileFields = ['image', 'birthCertificate', 'householdRegistration'];
             const uploadPromises = [];

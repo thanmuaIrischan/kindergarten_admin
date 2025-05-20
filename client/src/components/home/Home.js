@@ -308,8 +308,10 @@ const Home = () => {
         try {
             setIsLoading(true);
             if (studentAction === 'add') {
+                console.log("Add data", data);
                 await axios.post(`${API_URL}/student`, data);
             } else {
+                console.log("Update data", data);
                 await axios.put(`${API_URL}/student/${selectedStudent.id}`, data);
             }
             handleBackToList();

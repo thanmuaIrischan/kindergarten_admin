@@ -27,14 +27,13 @@ const EducationInfoSection = ({ formData, errors, handleInputChange, handleBlur 
 
         fetchClasses();
     }, []);
-
     return (
         <FormSection title="Education Information">
             <InputField
                 required
                 name="gradeLevel"
                 label="Grade Level"
-                value={formData.gradeLevel}
+                value={formData.gradeLevel.toString()}
                 onChange={handleInputChange}
                 onBlur={handleBlur}
                 inputProps={{ autoComplete: 'off' }}

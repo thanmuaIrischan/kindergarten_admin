@@ -34,27 +34,7 @@ const AddStudent = ({ onBack }) => {
             console.log('Raw form data:', formData); // Debug log for raw data
 
             // Deep clone and sanitize the data to remove any undefined values
-            const sanitizedFormData = JSON.parse(JSON.stringify({
-                studentProfile: {
-                    studentID: formData.studentID?.trim() || '',
-                    name: formData.name?.trim() || '',
-                    dateOfBirth: formData.dateOfBirth || '',
-                    gender: formData.gender?.trim() || '',
-                    fatherFullname: formData.fatherFullname?.trim() || '',
-                    fatherOccupation: formData.fatherOccupation?.trim() || '',
-                    motherFullname: formData.motherFullname?.trim() || '',
-                    motherOccupation: formData.motherOccupation?.trim() || '',
-                    gradeLevel: formData.gradeLevel ? parseInt(formData.gradeLevel) : 0,
-                    school: formData.school?.trim() || '',
-                    class: formData.class?.trim() || '',
-                    educationSystem: formData.educationSystem?.trim() || ''
-                },
-                studentDocument: {
-                    image: formData.studentDocument?.image?.public_id || '',
-                    birthCertificate: formData.studentDocument?.birthCertificate?.public_id || '',
-                    householdRegistration: formData.studentDocument?.householdRegistration?.public_id || ''
-                }
-            }));
+            const sanitizedFormData = formData;
 
             console.log('Sanitized form data structure:', {
                 hasStudentProfile: !!sanitizedFormData.studentProfile,

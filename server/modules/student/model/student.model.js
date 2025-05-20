@@ -24,6 +24,7 @@ const studentModel = {
 
 const toFirebaseFormat = (data) => {
     // Check if data has nested structure
+    console.log("Data in toFirebaseFormat: ", data);
     const profile = data.studentProfile || data;
     
     if (!profile.studentID) {
@@ -51,10 +52,10 @@ const toFirebaseFormat = (data) => {
             class: profile.class || '',
             educationSystem: profile.educationSystem || ''
         },
-        studentDocument: data.studentDocument || {
-            image: '',
-            birthCertificate: '',
-            householdRegistration: ''
+        studentDocument: {
+            image: data.image || data.studentDocument.image,
+            birthCertificate: data.birthCertificate || data.studentDocument.birthCertificate,
+            householdRegistration: data.householdRegistration || data.studentDocument.householdRegistration
         }
     };
 };
@@ -84,7 +85,8 @@ const toClientFormat = (doc) => {
         }
     };
 
-    return imageService.processStudentImages(student);
+    // return imageService.processStudentImages(student);
+    return student;
 };
 
 module.exports = {

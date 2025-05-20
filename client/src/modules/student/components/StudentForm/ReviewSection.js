@@ -1,9 +1,10 @@
 import React from 'react';
 import { Box, Typography, Stack } from '@mui/material';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import FormSection from './FormSection';
 
 const ReviewSection = ({ formData }) => {
+    const [day, month, year] = formData?.dateOfBirth.split("-");
     return (
         <FormSection title="Review Information">
             <Stack spacing={3}>
@@ -36,7 +37,7 @@ const ReviewSection = ({ formData }) => {
                         Date of Birth
                     </Typography>
                     <Typography variant="body1" sx={{ mt: 1 }}>
-                        {formData.dateOfBirth ? format(formData.dateOfBirth, 'dd-MM-yyyy') : ''}
+                        {formData.dateOfBirth}
                     </Typography>
                 </Box>
                 <Box>

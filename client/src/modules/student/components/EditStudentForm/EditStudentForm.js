@@ -9,7 +9,7 @@ import {
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, Save as SaveIcon } from '@mui/icons-material';
-import { format } from 'date-fns';
+import { format} from 'date-fns';
 
 import { validationHelpers, formatFieldName } from '../StudentForm/constants';
 import BasicInfoSection from '../StudentForm/BasicInfoSection';
@@ -21,23 +21,7 @@ import ReviewSection from '../StudentForm/ReviewSection';
 const EditStudentForm = ({ onSubmit, isLoading, studentData, activeStep, onBack }) => {
     const theme = useTheme();
     const [formData, setFormData] = useState({
-        studentID: studentData?.studentID || '',
-        firstName: studentData?.firstName || '',
-        lastName: studentData?.lastName || '',
-        name: studentData?.name || '',
-        dateOfBirth: studentData?.dateOfBirth ? new Date(studentData.dateOfBirth) : null,
-        gender: studentData?.gender || '',
-        gradeLevel: String(studentData?.gradeLevel || ''),
-        school: studentData?.school || '',
-        class: studentData?.class || '',
-        educationSystem: studentData?.educationSystem || '',
-        fatherFullName: studentData?.fatherFullName || '',
-        fatherOccupation: studentData?.fatherOccupation || '',
-        motherName: studentData?.motherName || '',
-        motherOccupation: studentData?.motherOccupation || '',
-        image: studentData?.image || null,
-        birthCertificate: studentData?.birthCertificate || null,
-        householdRegistration: studentData?.householdRegistration || null
+        ...studentData
     });
 
     const [errors, setErrors] = useState({});
@@ -97,17 +81,33 @@ const EditStudentForm = ({ onSubmit, isLoading, studentData, activeStep, onBack 
         }));
     }, []);
 
-    const handleFileChange = useCallback(async (e) => {
+    const handleFileChange = useCallback((e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        console.log("Name: ", name);
+        console.log("Value: ", value);
+        
+        // Handle nested object updates for studentDocument
+        if (name.startsWith('studentDocument.')) {
+            const field = name.split('.')[1];
+            setFormData(prev => ({
+                ...prev,
+                studentDocument: {
+                    ...prev.studentDocument,
+                    [field]: value.url
+                }
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
     }, []);
 
     const handleSubmit = useCallback((e) => {
         e.preventDefault();
-        
+        console.log("Submit")
+        console.log("Form Data: ",formData);
         // Validate all fields
         const newErrors = {};
         let hasErrors = false;
@@ -124,9 +124,8 @@ const EditStudentForm = ({ onSubmit, isLoading, studentData, activeStep, onBack 
         // Validate fields based on current step
         switch (activeStep) {
             case 0: // Basic Information
+                console.log("Date of birth: ", formData.dateOfBirth);
                 validateField('studentID', formData.studentID);
-                validateField('firstName', formData.firstName);
-                validateField('lastName', formData.lastName);
                 validateField('name', formData.name);
                 if (!formData.dateOfBirth) {
                     newErrors.dateOfBirth = 'Date of birth is required';
@@ -136,26 +135,26 @@ const EditStudentForm = ({ onSubmit, isLoading, studentData, activeStep, onBack 
                 break;
             
             case 1: // Education and Parent Information
-                validateField('gradeLevel', formData.gradeLevel);
+                // validateField('gradeLevel', formData.gradeLevel);
                 validateField('school', formData.school);
                 validateField('class', formData.class);
                 validateField('educationSystem', formData.educationSystem);
-                validateField('fatherFullName', formData.fatherFullName);
+                validateField('fatherFullname', formData.fatherFullname);
                 validateField('fatherOccupation', formData.fatherOccupation);
-                validateField('motherFullName', formData.motherFullName);
+                validateField('motherFullname', formData.motherFullname);
                 validateField('motherOccupation', formData.motherOccupation);
                 break;
             
             case 2: // Documents
-                if (!formData.image) {
+                if (!formData.studentDocument.image) {
                     newErrors.image = 'Student photo is required';
                     hasErrors = true;
                 }
-                if (!formData.birthCertificate) {
+                if (!formData.studentDocument.birthCertificate) {
                     newErrors.birthCertificate = 'Birth certificate is required';
                     hasErrors = true;
                 }
-                if (!formData.householdRegistration) {
+                if (!formData.studentDocument.householdRegistration) {
                     newErrors.householdRegistration = 'Household registration is required';
                     hasErrors = true;
                 }
@@ -163,26 +162,27 @@ const EditStudentForm = ({ onSubmit, isLoading, studentData, activeStep, onBack 
             
             case 3: // Review - Validate all fields
                 validateField('studentID', formData.studentID);
-                validateField('firstName', formData.firstName);
-                validateField('lastName', formData.lastName);
                 validateField('name', formData.name);
                 if (!formData.dateOfBirth) {
                     newErrors.dateOfBirth = 'Date of birth is required';
                     hasErrors = true;
                 }
                 validateField('gender', formData.gender);
-                validateField('gradeLevel', formData.gradeLevel);
+                validateField('gradeLevel', formData.gradeLevel.toString());
                 validateField('school', formData.school);
                 validateField('class', formData.class);
                 validateField('educationSystem', formData.educationSystem);
-                validateField('fatherFullName', formData.fatherFullName);
+                validateField('fatherFullname', formData.fatherFullname);
                 validateField('fatherOccupation', formData.fatherOccupation);
-                validateField('motherFullName', formData.motherFullName);
+                validateField('motherFullname', formData.motherFullname);
                 validateField('motherOccupation', formData.motherOccupation);
+                break;
+            default:
                 break;
         }
 
         if (hasErrors) {
+            console.log("Errors: ", newErrors);
             setErrors(newErrors);
             return;
         }
@@ -191,21 +191,20 @@ const EditStudentForm = ({ onSubmit, isLoading, studentData, activeStep, onBack 
         const submitData = {
             ...formData,
             studentID: formData.studentID.trim(),
-            firstName: formData.firstName.trim(),
-            lastName: formData.lastName.trim(),
             name: formData.name.trim(),
-            gradeLevel: formData.gradeLevel.trim(),
+            gradeLevel: formData.gradeLevel,
             school: formData.school.trim(),
             class: formData.class.trim(),
             educationSystem: formData.educationSystem.trim(),
-            fatherFullName: formData.fatherFullName.trim(),
+            fatherFullname: formData.fatherFullname.trim(),
             fatherOccupation: formData.fatherOccupation.trim(),
-            motherFullName: formData.motherFullName.trim(),
+            motherFullname: formData.motherFullname.trim(),
             motherOccupation: formData.motherOccupation.trim(),
             dateOfBirth: formData.dateOfBirth instanceof Date
                 ? format(formData.dateOfBirth, 'dd-MM-yyyy')
                 : formData.dateOfBirth
         };
+        console.log("Submit Data: ", submitData);
 
         // Call onSubmit and show success notification
         onSubmit(submitData);

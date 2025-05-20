@@ -379,6 +379,8 @@ const StudentForm = ({ onSubmit, isLoading, initialData, activeStep, onBack }) =
                     hasErrors = true;
                 }
                 break;
+            default:
+                break;
         }
 
         if (hasErrors) {
@@ -419,51 +421,21 @@ const StudentForm = ({ onSubmit, isLoading, initialData, activeStep, onBack }) =
                 motherOccupation: formData.motherOccupation.trim()
             },
             studentDocument: {
-                image: formData.studentDocument.image?.public_id || '',
-                birthCertificate: formData.studentDocument.birthCertificate?.public_id || '',
-                householdRegistration: formData.studentDocument.householdRegistration?.public_id || ''
+                image: formData.studentDocument.image?.url || '',
+                birthCertificate: formData.studentDocument.birthCertificate?.url || '',
+                householdRegistration: formData.studentDocument.householdRegistration?.url || ''
             }
         };
-
-        console.log('StudentForm - Form data before validation:', {
-            originalData: formData,
-            processedData: submitData,
-            dateOfBirth: {
-                original: formData.dateOfBirth,
-                formatted: formattedDate
-            }
-        });
 
         // Validate date of birth is not in the future
         const dobDate = new Date(submitData.studentProfile.dateOfBirth.split('-').reverse().join('-'));
         if (dobDate > new Date()) {
-            console.log('Date validation failed:', {
-                inputDate: submitData.studentProfile.dateOfBirth,
-                parsedDate: dobDate,
-                currentDate: new Date()
-            });
             setErrors(prev => ({
                 ...prev,
                 dateOfBirth: 'Date of birth cannot be in the future'
             }));
             return;
         }
-
-        // Final validation and debug log before submission
-        console.log('StudentForm - Final validation check:', {
-            studentID: {
-                value: submitData.studentProfile.studentID,
-                isValid: !!submitData.studentProfile.studentID
-            },
-            requiredFields: {
-                studentID: !!submitData.studentProfile.studentID,
-                name: !!submitData.studentProfile.name,
-                dateOfBirth: !!submitData.studentProfile.dateOfBirth,
-                gender: !!submitData.studentProfile.gender,
-                gradeLevel: !!submitData.studentProfile.gradeLevel,
-                class: !!submitData.studentProfile.class
-            }
-        });
 
         if (!submitData.studentProfile.studentID) {
             console.log('Final studentID check failed:', {

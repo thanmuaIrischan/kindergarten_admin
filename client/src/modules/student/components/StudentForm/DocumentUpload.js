@@ -120,7 +120,7 @@ const DocumentUpload = ({ title, name, value, onChange, accept, error }) => {
             }, 500);
         }
     };
-
+    console.log("Value: ", value);
     return (
         <Box
             sx={{
@@ -163,96 +163,101 @@ const DocumentUpload = ({ title, name, value, onChange, accept, error }) => {
                         }
                     }}
                 >
-                    {isUploading ? (
-                        <Box sx={{ width: '100%', textAlign: 'center' }}>
-                            <CircularProgress 
-                                variant="determinate" 
-                                value={uploadProgress} 
-                                size={40}
-                                sx={{ mb: 1 }}
-                            />
-                            <Typography variant="body2" color="textSecondary">
-                                Uploading... {uploadProgress}%
-                            </Typography>
-                        </Box>
-                    ) : value ? (
-                        <Box 
-                            sx={{ 
-                                position: 'relative',
-                                width: '100%',
-                                height: '100%',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                gap: 1
-                            }}
-                        >
-                            <Box
-                                sx={{
-                                    position: 'relative',
-                                    width: '100%',
-                                    height: '80px',
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                    alignItems: 'center'
-                                }}
-                            >
-                                <Box
-                                    component="img"
-                                    src={value.url}
-                                    alt={title}
-                                    sx={{
-                                        maxWidth: '100%',
-                                        maxHeight: '80px',
-                                        objectFit: 'contain',
-                                        borderRadius: 1,
-                                        boxShadow: theme.shadows[1]
-                                    }}
+                    {isUploading 
+                        ? (
+                            <Box sx={{ width: '100%', textAlign: 'center' }}>
+                                <CircularProgress
+                                    variant="determinate" 
+                                    value={uploadProgress} 
+                                    size={40}
+                                    sx={{ mb: 1 }}
                                 />
-                                <IconButton
-                                    size="small"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        e.preventDefault();
-                                        onChange({ target: { name, value: null } });
-                                    }}
-                                    sx={{
-                                        position: 'absolute',
-                                        top: -8,
-                                        right: -8,
-                                        backgroundColor: theme.palette.error.light,
-                                        color: theme.palette.common.white,
-                                        '&:hover': {
-                                            backgroundColor: theme.palette.error.main,
-                                        },
-                                        boxShadow: theme.shadows[2]
+                                <Typography variant="body2" color="textSecondary">
+                                    Uploading... {uploadProgress}%
+                                </Typography>
+                            </Box>
+                        )
+                        : typeof value === 'string' || (value && value.url) 
+                            ? (
+                                <Box 
+                                    sx={{ 
+                                        position: 'relative',
+                                        width: '100%',
+                                        height: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        gap: 1
                                     }}
                                 >
-                                    <DeleteIcon fontSize="small" />
-                                </IconButton>
-                            </Box>
-                            <Typography 
-                                variant="caption" 
-                                color="textSecondary"
-                                sx={{
-                                    mt: 0.5,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 0.5
-                                }}
-                            >
-                                <UploadIcon fontSize="small" />
-                                Click to change {title}
-                            </Typography>
-                        </Box>
-                    ) : (
-                        <Box sx={{ textAlign: 'center' }}>
-                            <UploadIcon sx={{ fontSize: 40, color: theme.palette.text.secondary, mb: 1 }} />
-                            <Typography color="textSecondary">
-                                Click or drag to upload {title}
-                            </Typography>
-                        </Box>
-                    )}
+                                    <Box
+                                        sx={{
+                                            position: 'relative',
+                                            width: '100%',
+                                            height: '80px',
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            alignItems: 'center'
+                                        }}
+                                    >
+                                        <Box
+                                            component="img"
+                                            src={typeof value === 'string' ? value : value?.url}
+                                            alt={title}
+                                            sx={{
+                                                maxWidth: '100%',
+                                                maxHeight: '80px',
+                                                objectFit: 'contain',
+                                                borderRadius: 1,
+                                                boxShadow: theme.shadows[1]
+                                            }}
+                                        />
+                                        <IconButton
+                                            size="small"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                e.preventDefault();
+                                                onChange({ target: { name, value: null } });
+                                            }}
+                                            sx={{
+                                                position: 'absolute',
+                                                top: -8,
+                                                right: -8,
+                                                backgroundColor: theme.palette.error.light,
+                                                color: theme.palette.common.white,
+                                                '&:hover': {
+                                                    backgroundColor: theme.palette.error.main,
+                                                },
+                                                boxShadow: theme.shadows[2]
+                                            }}
+                                        >
+                                            <DeleteIcon fontSize="small" />
+                                        </IconButton>
+                                    </Box>
+                                    <Typography 
+                                        variant="caption" 
+                                        color="textSecondary"
+                                        sx={{
+                                            mt: 0.5,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 0.5
+                                        }}
+                                    >
+                                        <UploadIcon fontSize="small" />
+                                        Click to change {title}
+                                    </Typography>
+                                </Box>
+                            ) 
+                            : (
+                                <Box sx={{ textAlign: 'center' }}>
+                                    <UploadIcon sx={{ fontSize: 40, color: theme.palette.text.secondary, mb: 1 }} />
+                                    <Typography color="textSecondary">
+                                        Click or drag to upload {title}
+                                    </Typography>
+                                </Box>
+                            )
+                        }
                 </Button>
             </label>
             {error && (

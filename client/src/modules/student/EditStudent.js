@@ -68,10 +68,10 @@ const EditStudent = ({ id, onBack, onSubmit }) => {
         setIsSaving(true);
         setError('');
         try {
+            console.log("Form data to server", formData);
             const response = await axios.put(`${API_URL}/student/${id}`, formData);
-            if (response.data && response.data.success) {
-                onSubmit(response.data.data);
-            } else {
+            console.log(response);
+            if (!(response.data && response.data.success)) {
                 throw new Error(response.data.error || 'Failed to update student');
             }
         } catch (error) {

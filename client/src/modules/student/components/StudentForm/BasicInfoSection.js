@@ -12,8 +12,14 @@ import { CheckCircle as CheckCircleIcon } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import FormSection from './FormSection';
 import InputField from './InputField';
+import { parse } from 'date-fns';
 
 const BasicInfoSection = ({ formData, errors, handleInputChange, handleBlur, handleDateChange, isCheckingID, isValidID }) => {
+    const parsedDate = formData.dateOfBirth
+    ? (typeof formData.dateOfBirth === 'string'
+        ? parse(formData.dateOfBirth, 'dd-MM-yyyy', new Date())
+        : formData.dateOfBirth)
+    : null;
     return (
         <FormSection title="Personal Information">
             <InputField
@@ -55,7 +61,7 @@ const BasicInfoSection = ({ formData, errors, handleInputChange, handleBlur, han
             />
             <DatePicker
                 label="Date of Birth"
-                value={formData.dateOfBirth}
+                value={parsedDate}
                 onChange={handleDateChange}
                 maxDate={new Date()}
                 renderInput={(params) => (
