@@ -7,6 +7,7 @@ export const fetchStudents = async (classId) => {
         // Get the class data first to get the current list of student IDs
         const classResponse = await axios.get(`${API_URL}/class/${classId}`);
         const classData = classResponse.data.data;
+        console.log("classData", classData)
         
         if (!classData || !classData.students || !Array.isArray(classData.students)) {
             console.log('No students found in class or invalid class data');
@@ -14,8 +15,9 @@ export const fetchStudents = async (classId) => {
         }
 
         // Get all students
-        const studentsResponse = await axios.get(`${API_URL}/student`);
+        const studentsResponse = await axios.get(`${API_URL}/student?limit=0`);
         const allStudents = studentsResponse.data.data || [];
+        console.log("allStudents", allStudents)
 
         // Filter students that are actually in the class based on the class's student list
         const classStudents = allStudents.filter(student => 
@@ -44,16 +46,19 @@ export const addStudentToClass = async (student, classId, onSuccess) => {
         // Get current class data
         const classResponse = await axios.get(`${API_URL}/class/${classId}`);
         const currentClass = classResponse.data.data;
+        console.log("currentClass", currentClass)
 
         // Get current student IDs
         const currentStudents = currentClass.students || [];
-        const studentsToAdd = Array.isArray(student) ? student : [student];
-        const newStudentIds = studentsToAdd.map(s => s.studentID);
+        const newStudents = Array.isArray(student) ? student : [student];
 
         // Check for duplicates with detailed information
-        const duplicateStudents = studentsToAdd.filter(s => 
+        const duplicateStudents = newStudents.filter(s => 
             currentStudents.includes(s.studentID)
         );
+        console.log("currentStudents", currentStudents)
+        console.log("New students", newStudents)
+        console.log("duplicateStudents", duplicateStudents)
 
         if (duplicateStudents.length > 0) {
             const duplicateNames = duplicateStudents
@@ -62,14 +67,8 @@ export const addStudentToClass = async (student, classId, onSuccess) => {
             throw new Error(`The following students are already in this class: ${duplicateNames}`);
         }
 
-        // Filter out any undefined or null student IDs
-        const validStudentIds = newStudentIds.filter(id => id);
-        if (validStudentIds.length === 0) {
-            throw new Error('No valid students to add');
-        }
-
         // Update class with new students
-        const updatedStudents = [...currentStudents, ...validStudentIds];
+        const updatedStudents = [...newStudents];
         
         // Update the class
         const response = await axios.put(`${API_URL}/class/${classId}`, {
@@ -78,9 +77,9 @@ export const addStudentToClass = async (student, classId, onSuccess) => {
         });
 
         if (response.data.success) {
-            const addedCount = validStudentIds.length;
+            const addedCount = newStudents.length;
             console.log('Successfully added students:', {
-                added: validStudentIds,
+                added: newStudents,
                 addedCount,
                 total: updatedStudents.length
             });

@@ -688,11 +688,11 @@ const ClassDetails = ({ classData, onBack, onEditStudent }) => {
 
                     {/* Action Buttons and Student Table */}
                     <Grid item xs={12} md={8}>
-                        <ActionButtons
+                        {/* <ActionButtons
                             showActions={showActions}
                             onToggleActions={() => setShowActions(!showActions)}
                             onActionClick={handleActionClick}
-                        />
+                        /> */}
                         <Box sx={{ mt: 3 }}>
                             {viewMode === 'list' ? (
                                 <StudentTable

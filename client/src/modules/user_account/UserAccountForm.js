@@ -90,10 +90,14 @@ const UserAccountForm = ({ account, onSuccess, onCancel }) => {
         label="Phone Number"
         rules={[
           { required: true, message: 'Please input phone number!' },
-          { pattern: /^\d{10}$/, message: 'Please enter a valid 10-digit phone number!' }
+          { 
+            pattern: /^\+?[1-9]\d{1,14}$/, 
+            message: 'Please enter a valid phone number in E.164 format (e.g., +1234567890)!' 
+          }
         ]}
+        extra="Enter phone number in E.164 format (e.g., +1234567890)"
       >
-        <Input />
+        <Input placeholder="+1234567890" />
       </Form.Item>
 
       <Form.Item>

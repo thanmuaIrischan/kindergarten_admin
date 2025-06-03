@@ -151,17 +151,19 @@ const AddStudent = ({ open, onClose, classId, currentStudentIds = [], onStudentA
 
             const updatedStudents = [...currentStudents, ...newStudentIds];
 
-            const response = await axios.put(`${API_URL}/class/${classId}`, {
-                ...currentClass,
-                students: updatedStudents
-            });
+            // const response = await axios.put(`${API_URL}/class/${classId}`, {
+            //     ...currentClass,
+            //     students: updatedStudents
+            // });
 
-            if (response.data.success) {
-                await onStudentAdd(selectedStudents, response.data.data);
-                onClose();
-            } else {
-                throw new Error('Failed to add students to class');
-            }
+            // if (response.data.success) {
+            //     await onStudentAdd(selectedStudents, response.data.data);
+            //     onClose();
+            // } else {
+            //     throw new Error('Failed to add students to class');
+            // }
+            await onStudentAdd(updatedStudents, currentClass);
+            onClose();
         } catch (error) {
             console.error('Error adding students:', error);
             setError(error.message || 'Failed to add students. Please try again.');

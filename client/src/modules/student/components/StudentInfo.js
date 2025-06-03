@@ -27,6 +27,7 @@ const SectionTitle = ({ title, sx }) => (
 const StudentInfo = ({ student }) => {
     const theme = useTheme();
     const sx = getStyles(theme);
+    console.log("student", student)
 
     return (
         <Stack spacing={4}>
@@ -34,7 +35,7 @@ const StudentInfo = ({ student }) => {
             <Box sx={sx.section}>
                 <SectionTitle title="Personal Information" sx={sx} />
                 <DetailRow label="Student ID" value={student.studentID} sx={sx} />
-                <DetailRow label="Full Name" value={`${student.lastName} ${student.firstName}`} sx={sx} />
+                <DetailRow label="Full Name" value={`${student.name}`} sx={sx} />
                 <DetailRow label="Gender" value={student.gender} sx={sx} />
                 <DetailRow label="Date of Birth" value={student.dateOfBirth} sx={sx} />
                 <DetailRow label="Class" value={student.class} sx={sx} />
@@ -46,9 +47,9 @@ const StudentInfo = ({ student }) => {
             {/* Parent Information Section */}
             <Box sx={sx.section}>
                 <SectionTitle title="Parent Information" sx={sx} />
-                <DetailRow label="Father's Name" value={student.fatherFullName || 'N/A'} sx={sx} />
+                <DetailRow label="Father's Name" value={student.fatherFullname || 'N/A'} sx={sx} />
                 <DetailRow label="Father's Occupation" value={student.fatherOccupation} sx={sx} />
-                <DetailRow label="Mother's Name" value={student.motherName || 'N/A'} sx={sx} />
+                <DetailRow label="Mother's Name" value={student.motherFullname || 'N/A'} sx={sx} />
                 <DetailRow label="Mother's Occupation" value={student.motherOccupation} sx={sx} />
             </Box>
         </Stack>

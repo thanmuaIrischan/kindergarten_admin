@@ -56,6 +56,9 @@ const createAccount = async (req, res) => {
       return res.status(400).json({ error: 'All fields are required' });
     }
     
+    // Format phone number to E.164 format (required by Firebase)
+    const formattedPhoneNumber = phoneNumber.startsWith('+') ? phoneNumber : `+${phoneNumber}`;
+    
     console.log('Checking for existing username:', username);
     try {
       const existingUser = await db.collection('account')
@@ -71,10 +74,25 @@ const createAccount = async (req, res) => {
       return res.status(500).json({ error: 'Failed to check username availability' });
     }
 
-    console.log('Creating new account in database');
+    console.log('Creating new account in Firebase Authentication');
     try {
+      // Create user in Firebase Authentication
+      const userRecord = await admin.auth().createUser({
+        email: username, // Using username as email
+        password: password,
+        displayName: fullName,
+        phoneNumber: formattedPhoneNumber
+      });
+
+      console.log('Creating new account in database');
       // Create account document data
-                  const accountData = {        username,        password,        fullName,        role,        phoneNumber      };
+      const accountData = {
+        username,
+        password,
+        fullName,
+        role,
+        phoneNumber: formattedPhoneNumber
+      };
 
       // Add the document to Firestore
       const docRef = await db.collection('account').add(accountData);
@@ -90,9 +108,13 @@ const createAccount = async (req, res) => {
       res.status(201).json(responseData);
     } catch (error) {
       console.error('Error in database operation:', error);
+      // If there's an error, try to clean up the Firebase Auth user if it was created
+      if (error.code === 'auth/email-already-exists') {
+        return res.status(400).json({ error: 'Username already exists in authentication system' });
+      }
       return res.status(500).json({ 
         error: 'Failed to create account in database',
-        details: error.message 
+        details: error.message
       });
     }
   } catch (error) {
